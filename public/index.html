@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wizards-oke Sign-Up</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Trade+Winds&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-image: url('/images/backgrounds/flier.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #e91e63;
+            font-family: "Trade Winds", system-ui;
+            font-weight: 400;
+            font-style: normal;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, button, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #e91e63;
+        }
+        
+        button {
+            background: #e91e63;
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        button:hover {
+            background: #d81b60;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .search-container {
+            position: relative;
+        }
+        
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e91e63;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .search-result {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .search-result:hover {
+            background: #f9f9f9;
+        }
+        
+        .search-result:last-child {
+            border-bottom: none;
+        }
+        
+        .result-thumbnail {
+            width: 80px;
+            height: 60px;
+            border-radius: 4px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        
+        .result-info {
+            flex: 1;
+        }
+        
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+        
+        .result-channel {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .selected-song {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 2px solid #4CAF50;
+        }
+        
+        .instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .search-warning {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 12px 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .current-song {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .queue {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .queue-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .queue-item:last-child {
+            border-bottom: none;
+        }
+        
+        .singer-name {
+            font-weight: 600;
+            color: #e91e63;
+        }
+        
+        .song-title {
+            color: #666;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        
+        .queue-position {
+            background: #e91e63;
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .empty-queue {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+        }
+        
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+            display: none;
+        }
+
+        .disclaimer {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .disclaimer h4 {
+            font-weight: 800;
+        }
+        
+        .manual-input-section {
+            background: #fff8e1;
+            border: 2px solid #ff9800;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .quota-status {
+            text-align: center;
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .quota-good {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #4CAF50;
+        }
+        
+        .quota-warning {
+            background: #fff3e0;
+            color: #f57c00;
+            border: 1px solid #ff9800;
+        }
+        
+        .quota-exceeded {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #f44336;
+        }
+        
+        .manual-btn {
+            background: #ff9800;
+        }
+        
+        .manual-btn:hover {
+            background: #f57c00;
+        }
+
+        .search-button {
+            background: #2196F3;
+            width: auto;
+            padding: 12px 20px;
+        }
+
+        .search-button:hover {
+            background: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Wizardsoke Sign-Up</h1>
+        
+        <div class="instructions">
+            <strong>How to:</strong><br>
+            1. Enter name, search song, hit the button<br>
+            2. When it's your turn, hit the spacebar to start!<br>
+        </div>
+
+        <div class="search-warning">
+            <strong>🎤 How to Add Songs:</strong><br>
+            • <strong>Search</strong>: Fast & easy (limited attempts)<br>
+            • <strong>Manual URL</strong>: Paste any YouTube link (unlimited)<br>
+            • Know the exact song title before searching for best results
+        </div>
+
+        <div class="disclaimer">
+            <h4>Be Cool, Ya' Goose!</h4>
+            <p>Don't be sing-greedy</p>
+            <ul>
+                <li><strong>One song at a time</strong> - wait for ur turn to end before queueing again</li>
+                <li><strong>For real, last year there was only time for one song each</strong></li>
+            </ul>
+            <p><em>Love you so fuckin much</em></p>
+            
+            <div style="margin-top: 20px; border: 2px solid #1a1a1a; background: linear-gradient(135deg, #0c0c0c 0%, #2d2d2d 100%); padding: 15px; border-radius: 8px; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; right: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #e91e63, transparent); animation: scan 3s infinite;"></div>
+                
+                <div style="text-align: center; color: #fff; font-family: 'Courier New', monospace;">
+                    <div style="font-size: 12px; color: #e91e63; letter-spacing: 2px; margin-bottom: 5px;">CLASSIFIED</div>
+                    <a href="/briefing" style="color: #00ff88; text-decoration: none; font-weight: 700; font-size: 14px; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);">
+                        🔍 ACCESS COVERT OPERATIONS
+                    </a>
+                    <div style="font-size: 10px; color: #888; margin-top: 8px; letter-spacing: 1px;">
+                        SECRET MISSIONS AVAILABLE
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quota Status Display -->
+        <div id="quotaStatus" class="quota-status quota-good">
+            Checking search availability...
+        </div>
+        
+        <div class="form-group">
+            <label for="singerName">Your Name</label>
+            <input type="text" id="singerName" placeholder="Enter your name" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="songSearch">Search for a Song</label>
+            <div class="search-container">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="songSearch" placeholder="Type song name and press ENTER..." autocomplete="off" style="flex: 1;">
+                    <button onclick="performManualSearch()" class="search-button">
+                        🔍 Search
+                    </button>
+                </div>
+                <div id="searchResults" class="search-results"></div>
+            </div>
+        </div>
+        
+        <div id="selectedSong" class="selected-song" style="display: none;">
+            <strong>Selected Song:</strong>
+            <div id="selectedSongTitle"></div>
+            <button onclick="clearSelection()" style="background: #666; margin-top: 10px; padding: 8px 15px; font-size: 14px;">
+                Change Song
+            </button>
+        </div>
+        
+        <button id="submitBtn" onclick="submitRequest()" disabled>Join Queue</button>
+        
+        <!-- Manual YouTube URL Input -->
+        <div id="manualInputSection" class="manual-input-section">
+            <h3>🔧 Manual YouTube URL</h3>
+            <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">
+                Search not working? Paste any YouTube URL below:
+            </p>
+            
+            <div class="form-group">
+                <label for="youtubeUrl">YouTube URL</label>
+                <input type="text" id="youtubeUrl" placeholder="https://www.youtube.com/watch?v=..." style="font-family: monospace;">
+            </div>
+            
+            <button onclick="validateManualVideo()" class="manual-btn">Validate & Add to Queue</button>
+            <button onclick="hideManualInput()" style="background: #666;">Cancel</button>
+            
+            <div id="manualValidationMessage" style="margin-top: 10px; padding: 10px; border-radius: 4px; display: none;"></div>
+        </div>
+        
+        <div style="text-align: center; margin: 15px 0;">
+            <button onclick="showManualInput()" class="manual-btn" style="width: auto; padding: 8px 16px;">
+                🔧 Use Manual YouTube URL
+            </button>
+        </div>
+        
+        <div id="successMessage" class="success-message">
+            ✅ Song added to queue!
+        </div>
+        
+        <div id="errorMessage" class="error-message">
+            Error adding song to queue
+        </div>
+    </div>
+
+    <div id="currentSong" class="current-song" style="display: none;">
+        <h3>🎵 Now Singing</h3>
+        <div id="currentSongInfo"></div>
+    </div>
+
+    <div class="queue">
+        <h3>📋 Up Next</h3>
+        <div id="queueList" class="empty-queue">
+            No songs in queue yet
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let selectedVideo = null;
+        let searchQuotaExceeded = false;
+
+        // Check quota status on page load
+        async function checkQuotaStatus() {
+            try {
+                const response = await fetch('/api/quota-status');
+                const quota = await response.json();
+                
+                const quotaElement = document.getElementById('quotaStatus');
+                if (quota.exceeded) {
+                    quotaElement.textContent = '🔴 Search unavailable - Use manual URL below';
+                    quotaElement.className = 'quota-status quota-exceeded';
+                    searchQuotaExceeded = true;
+                    showManualInput();
+                } else {
+                    const searchesLeft = Math.floor(quota.remaining / 100);
+                    
+                    if (searchesLeft <= 3) {
+                        quotaElement.textContent = `🟡 Very low - ${searchesLeft} search${searchesLeft === 1 ? '' : 'es'} left`;
+                        quotaElement.className = 'quota-status quota-warning';
+                    } else if (searchesLeft <= 10) {
+                        quotaElement.textContent = `🟡 Limited - ${searchesLeft} searches left`;
+                        quotaElement.className = 'quota-status quota-warning';
+                    } else {
+                        quotaElement.textContent = `🟢 Ready - ${searchesLeft}+ searches available`;
+                        quotaElement.className = 'quota-status quota-good';
+                    }
+                    searchQuotaExceeded = false;
+                }
+            } catch (error) {
+                document.getElementById('quotaStatus').textContent = '⚠️ Could not check search status';
+                searchQuotaExceeded = false;
+            }
+        }
+
+        // Enter to search
+        document.getElementById('songSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch(e.target.value);
+            }
+        });
+
+        // Clear results when typing
+        document.getElementById('songSearch').addEventListener('input', function(e) {
+            const resultsDiv = document.getElementById('searchResults');
+            if (e.target.value.length < 2) {
+                resultsDiv.style.display = 'none';
+            }
+        });
+
+        function performManualSearch() {
+            const query = document.getElementById('songSearch').value.trim();
+            if (query.length < 2) {
+                alert('Please enter at least 2 characters to search');
+                return;
+            }
+            performSearch(query);
+        }
+
+        // Manual input functions
+        function showManualInput() {
+            document.getElementById('manualInputSection').style.display = 'block';
+        }
+
+        function hideManualInput() {
+            document.getElementById('manualInputSection').style.display = 'none';
+            document.getElementById('youtubeUrl').value = '';
+            document.getElementById('manualValidationMessage').style.display = 'none';
+        }
+
+        async function validateManualVideo() {
+            const youtubeUrl = document.getElementById('youtubeUrl').value.trim();
+            const singer = document.getElementById('singerName').value.trim();
+            const messageElement = document.getElementById('manualValidationMessage');
+            
+            if (!youtubeUrl) {
+                showManualMessage('Please enter a YouTube URL', 'error');
+                return;
+            }
+
+            if (!singer) {
+                showManualMessage('Please enter your name first', 'error');
+                return;
+            }
+
+            // Basic URL validation
+            if (!youtubeUrl.includes('youtube.com/watch') && !youtubeUrl.includes('youtu.be/')) {
+                showManualMessage('Please enter a valid YouTube URL', 'error');
+                return;
+            }
+
+            showManualMessage('Validating video...', 'loading');
+
+            try {
+                const response = await fetch('/api/validate-video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ youtubeUrl })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showManualMessage(`✅ Validated: ${data.title}`, 'success');
+                    await addManualVideoToQueue(data.videoId, data.title, singer);
+                } else {
+                    showManualMessage(`❌ ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showManualMessage('❌ Validation failed. Please check the URL and try again.', 'error');
+            }
+        }
+
+        function showManualMessage(message, type) {
+            const messageElement = document.getElementById('manualValidationMessage');
+            messageElement.textContent = message;
+            messageElement.style.display = 'block';
+            messageElement.style.background = type === 'success' ? '#e8f5e8' : 
+                                            type === 'error' ? '#ffebee' : '#f5f5f5';
+            messageElement.style.color = type === 'success' ? '#2e7d32' : 
+                                       type === 'error' ? '#c62828' : '#666';
+            messageElement.style.border = type === 'success' ? '1px solid #4CAF50' : 
+                                        type === 'error' ? '1px solid #f44336' : '1px solid #ddd';
+        }
+
+        async function addManualVideoToQueue(videoId, title, singer) {
+            try {
+                const response = await fetch('/api/request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        singer: singer,
+                        videoId: videoId,
+                        songTitle: title
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`✅ Added to queue! Position: ${data.queuePosition}`);
+                    clearForm();
+                    hideManualInput();
+                } else {
+                    showError('Error: ' + (data.error || 'Failed to add to queue'));
+                }
+            } catch (error) {
+                console.error('Request error:', error);
+                showError('Error submitting request');
+            }
+        }
+
+        async function performSearch(query) {
+            const resultsDiv = document.getElementById('searchResults');
+            
+            if (query.length < 2) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="loading">Searching...</div>';
+            resultsDiv.style.display = 'block';
+
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                
+                if (response.status === 429) {
+                    // Quota exceeded
+                    resultsDiv.innerHTML = `
+                        <div style="text-align: center; padding: 20px; color: #ff4444;">
+                            <strong>Search Quota Exceeded</strong><br>
+                            <span style="font-size: 0.9em;">Use the manual URL input below to add songs.</span>
+                        </div>
+                    `;
+                    searchQuotaExceeded = true;
+                    showManualInput();
+                    return;
+                }
+
+                const videos = await response.json();
+                
+                if (videos.length === 0) {
+                    resultsDiv.innerHTML = '<div class="loading">No embeddable videos found</div>';
+                    return;
+                }
+                
+                resultsDiv.innerHTML = '';
+                videos.forEach(video => {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'search-result';
+                    resultDiv.innerHTML = `
+                        <img src="${video.thumbnail}" class="result-thumbnail" alt="Thumbnail">
+                        <div class="result-info">
+                            <div class="result-title">${video.title}</div>
+                            <div class="result-channel">${video.channel}</div>
+                        </div>
+                    `;
+                    resultDiv.onclick = () => selectVideo(video);
+                    resultsDiv.appendChild(resultDiv);
+                });
+            } catch (error) {
+                console.error('Search error:', error);
+                resultsDiv.innerHTML = '<div class="loading">Search failed. Try again.</div>';
+            }
+        }
+
+        function selectVideo(video) {
+            selectedVideo = video;
+            document.getElementById('selectedSongTitle').textContent = video.title;
+            document.getElementById('selectedSong').style.display = 'block';
+            document.getElementById('searchResults').style.display = 'none';
+            document.getElementById('songSearch').value = '';
+            updateSubmitButton();
+        }
+
+        function clearSelection() {
+            selectedVideo = null;
+            document.getElementById('selectedSong').style.display = 'none';
+            document.getElementById('submitBtn').disabled = true;
+        }
+
+        function updateSubmitButton() {
+            const singer = document.getElementById('singerName').value.trim();
+            document.getElementById('submitBtn').disabled = !(singer && selectedVideo);
+        }
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                document.getElementById('searchResults').style.display = 'none';
+            }
+        });
+
+        async function submitRequest() {
+            const singer = document.getElementById('singerName').value.trim();
+            
+            if (!singer || !selectedVideo) {
+                showError('Please enter your name and select a song');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        singer: singer,
+                        videoId: selectedVideo.id,
+                        songTitle: selectedVideo.title
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess(`✅ Added to queue! Position: ${data.queuePosition}`);
+                    clearForm();
+                } else {
+                    showError('Error: ' + (data.error || 'Failed to add to queue'));
+                }
+            } catch (error) {
+                console.error('Request error:', error);
+                showError('Error submitting request');
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('singerName').value = '';
+            clearSelection();
+            document.getElementById('submitBtn').disabled = true;
+        }
+
+        function showSuccess(message) {
+            const successMsg = document.getElementById('successMessage');
+            successMsg.textContent = message;
+            successMsg.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+            
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 5000);
+        }
+
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMessage');
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+            
+            setTimeout(() => {
+                errorMsg.style.display = 'none';
+            }, 5000);
+        }
+
+        // Real-time queue updates
+        socket.on('queueUpdate', (data) => {
+            const queueList = document.getElementById('queueList');
+            const currentSongDiv = document.getElementById('currentSong');
+            const currentSongInfo = document.getElementById('currentSongInfo');
+            
+            if (data.currentSong) {
+                currentSongDiv.style.display = 'block';
+                currentSongInfo.innerHTML = 
+                    `<div class="singer-name">${data.currentSong.singer}</div>
+                     <div class="song-title">${data.currentSong.songTitle}</div>`;
+            } else {
+                currentSongDiv.style.display = 'none';
+            }
+            
+            if (data.queue.length === 0) {
+                queueList.innerHTML = '<div class="empty-queue">No songs in queue yet</div>';
+                return;
+            }
+            
+            queueList.innerHTML = '';
+            data.queue.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'queue-item';
+                div.innerHTML = `
+                    <div>
+                        <div class="singer-name">${item.singer}</div>
+                        <div class="song-title">${item.songTitle}</div>
+                    </div>
+                    <div class="queue-position">${index + 1}</div>
+                `;
+                queueList.appendChild(div);
+            });
+        });
+
+        // Enable form validation
+        document.getElementById('singerName').addEventListener('input', updateSubmitButton);
+
+        // Initialize quota check
+        window.addEventListener('load', checkQuotaStatus);
+    </script>
+
+    <style>
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+    </style>
+</body>
+</html>

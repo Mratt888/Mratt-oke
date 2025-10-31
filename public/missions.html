@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcane Operations</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&family=UnifrakturMaguntia&display=swap');
+      html {
+    scroll-behavior: auto !important;
+}  
+       body {
+    margin: 0;
+    padding: 20px;
+    background: #0a0a0a;
+    color: #e91e63;
+    font-family: 'Courier New', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    /* Remove any position: fixed */
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    border: 3px double #e91e63;
+    padding: 30px;
+    background: rgba(10, 10, 10, 0.95);
+    position: relative;
+    box-shadow: 0 0 30px rgba(233, 30, 99, 0.3);
+    /* Ensure it has room to scroll */
+    min-height: auto;
+}
+        
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #e91e63, #00ff88, #e91e63, transparent);
+            animation: scan 4s linear infinite;
+        }
+        
+        h1 {
+            font-family: 'UnifrakturMaguntia', cursive;
+            text-align: center;
+            color: #00ff88;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #e91e63;
+            font-size: 0.9em;
+            letter-spacing: 3px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+        
+        .mission-display {
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid #333;
+            padding: 25px;
+            margin: 25px 0;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+        }
+        
+        .mission-text {
+            font-size: 1.2em;
+            line-height: 1.5;
+            color: #fff;
+        }
+        
+        .mission-category {
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #0a0a0a;
+            padding: 0 10px;
+            font-size: 0.8em;
+            color: #e91e63;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 25px 0;
+        }
+        
+        button {
+            background: transparent;
+            color: #00ff88;
+            border: 1px solid #00ff88;
+            padding: 12px 25px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button:hover {
+            background: rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+        
+        button:disabled {
+            color: #666;
+            border-color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        button:disabled:hover {
+            background: transparent;
+            box-shadow: none;
+        }
+        
+        .status {
+            text-align: center;
+            margin: 15px 0;
+            min-height: 20px;
+            font-size: 0.9em;
+        }
+        
+        .completed {
+            color: #00ff88;
+        }
+        
+        .error {
+            color: #ff4444;
+        }
+        
+        .instructions {
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 30px;
+            line-height: 1.4;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+        
+        .leaderboard {
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid #333;
+            padding: 20px;
+            margin: 20px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .leaderboard h3 {
+            color: #00ff88;
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #222;
+        }
+        
+        .leaderboard-item:last-child {
+            border-bottom: none;
+        }
+        
+        .leaderboard-rank {
+            color: #e91e63;
+            font-weight: bold;
+            width: 30px;
+        }
+        
+        .leaderboard-name {
+            color: #fff;
+            flex: 1;
+        }
+        
+        .leaderboard-score {
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        .current-score {
+            text-align: center;
+            color: #00ff88;
+            font-size: 1.1em;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Arcane Operations</h1>
+        <div class="subtitle">Department of Esoteric Affairs</div>
+        
+        <div style="text-align: center; margin: 15px 0;">
+            <div style="color: #00ff88; font-size: 1.1em; margin-bottom: 10px;">
+                Operative: <span id="currentCodename" style="font-weight: bold;">Loading...</span>
+            </div>
+            <button onclick="showCodenameEditor()" style="background: #9c27b0; padding: 8px 16px; font-size: 0.9em;">
+                ✏️ Edit Codename
+            </button>
+        </div>
+        
+        <div class="current-score" id="currentScore">
+            Rituals Completed: <span id="scoreValue">0</span>
+        </div>
+        
+        <div class="mission-display">
+            <div class="mission-category">Awaiting Directive</div>
+            <div id="missionText" class="mission-text">
+                Your arcane assignment awaits...<br>
+                <span style="color: #e91e63; font-size: 0.9em;">(Should you choose to accept it)</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="getMissionBtn" onclick="getRandomMission()">Summon Ritual</button>
+            <button id="completeBtn" onclick="completeMission()" disabled>Ritual Complete</button>
+        </div>
+        
+        <div id="statusMessage" class="status"></div>
+        
+        <div class="leaderboard">
+            <h3>🏆 Summoner's Leaderboard 🏆</h3>
+            <div id="leaderboardList">
+                <div style="text-align: center; color: #666; padding: 20px;">
+                    Awakening the scrying orb...
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <strong>Operative Protocol:</strong><br>
+            One ritual at a time. Complete your current summoning before attempting another.<br>
+            All directives are binding until completed. The class 12 entity demands sincerity.<br>
+            Some missions might not make sense with the logic of the game, just mark as complete in good faith. I coded this in a day.
+        </div>
+    </div>
+
+    <div id="codenameEditor" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+        <div style="background: #1a1a1a; border: 2px solid #00ff88; padding: 30px; border-radius: 12px; max-width: 400px; width: 90%;">
+            <h3 style="color: #00ff88; text-align: center; margin-bottom: 20px;">Edit Operative Codename</h3>
+            <input type="text" id="newCodename" placeholder="Enter new codename..." maxlength="20" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid #333; border-radius: 6px; color: white; text-align: center; font-size: 16px;">
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button onclick="updateCodename()" style="background: #00ff88; color: #000; flex: 1;">Save Codename</button>
+                <button onclick="hideCodenameEditor()" style="background: #666; flex: 1;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Complete mission database - ALL 78 MISSIONS
+        const missions = [
+            {id: 1, text: "The Recruiter (Red): Secretly recruit people to the RED team. Teams go public at 10:30 PM.", category: "Social Alchemy"},
+            {id: 2, text: "The Recruiter (Blue): Secretly recruit people to the BLUE team.", category: "Social Alchemy"},
+            {id: 3, text: "The Winker's Curse: Wink until someone winks back, then pass the curse to them.", category: "Arcane Transmission"},
+            {id: 4, text: "The Unlikely Fact: Tell an absurd 'fact.' When someone believes it, their mission is to spread it.", category: "Memetic Hazard"},
+            {id: 5, text: "The Token of Power: Bestow a weird token on someone and tell them to protect and pass it on.", category: "Artifact Distribution"},
+            {id: 6, text: "The Banana Obsession: Have five separate conversations. In each, say 'banana' at least three times naturally.", category: "Verbal Enchantment"},
+            {id: 7, text: "The Tango Obsession: Have five separate conversations. In each, say 'tango' at least three times naturally.", category: "Verbal Enchantment"},
+            {id: 8, text: "The Question Master: For 15 minutes, you can only speak in questions.", category: "Interrogation Protocol"},
+            {id: 9, text: "The Echo: Whenever your target finishes a sentence, say '...exactly!'", category: "Parroting Ritual"},
+            {id: 10, text: "The Whisperer: Whisper one fake secret to three different people.", category: "Covert Communication"},
+            {id: 11, text: "The Complimenter: Give a genuine compliment to three people you don't know well.", category: "Social Engineering"},
+            {id: 12, text: "The Contrarian: For 10 minutes, gently disagree with the first statement anyone makes.", category: "Contrarian Curse"},
+            {id: 13, text: "The Translator: 'Translate' someone's conversation into a grand adventure.", category: "Linguistic Alchemy"},
+            {id: 14, text: "The Debriefer: Find another agent and get them to confess their mission.", category: "Counter-Intelligence"},
+            {id: 15, text: "The Conspiracy Theorist: Casually bring up a ridiculous conspiracy to a stranger.", category: "Disinformation"},
+            {id: 16, text: "The Gossip: Start a harmless, positive rumor and see if it gets back to you.", category: "Information Spread"},
+            {id: 17, text: "The Mirror: Have a 1-minute conversation where you copy someone's body language and repeat their last few words.", category: "Mimicry Magic"},
+            {id: 18, text: "The Mayor: Learn the first names of 5 people you didn't know when you arrived.", category: "Social Cartography"},
+            {id: 19, text: "The Ice Cube Challenge: See how many ice cubes you can fit in your mouth. You must refill the tray.", category: "Cryogenic Endurance"},
+            {id: 20, text: "The Hydration Station: Drink from the sink for 10 seconds, then declare 'A fine vintage!'", category: "Hydration Ritual"},
+            {id: 21, text: "The Hydration Station (Duplicate 1): Drink from the sink for 10 seconds, then declare 'A fine vintage!'", category: "Hydration Ritual"},
+            {id: 22, text: "The Hydration Station (Duplicate 2): Drink from the sink for 10 seconds, then declare 'A fine vintage!'", category: "Hydration Ritual"},
+            {id: 23, text: "The Hydration Station (Duplicate 3): Drink from the sink for 10 seconds, then declare 'A fine vintage!'", category: "Hydration Ritual"},
+            {id: 24, text: "The Calisthenics Count: Do 20 jumping jacks outside, then report 'The blood is flowing.'", category: "Physical Exertion"},
+            {id: 25, text: "The Shadow Boxer: Shadowbox an invisible opponent for 30 seconds.", category: "Combat Practice"},
+            {id: 26, text: "The Elevated Limb: Keep one hand above your head for ten minutes.", category: "Physical Endurance"},
+            {id: 27, text: "The Cursed T-Rex: Hold your arms like a T-Rex until you defeat someone at Rock-Paper-Scissors.", category: "Prehistoric Curse"},
+            {id: 28, text: "The Blind Navigator: Walk with your eyes closed until someone hands you a drink.", category: "Sensory Deprivation"},
+            {id: 29, text: "The Greeter: Stand by the door for 10 minutes and give a specific instruction to everyone who enters or leaves.", category: "Gatekeeping"},
+            {id: 30, text: "The Champion: Defeat 5 different people at Rock-Paper-Scissors.", category: "Ritual Combat"},
+            {id: 31, text: "The High-Fiver: Get a successful high-five from 10 different people.", category: "Physical Contact"},
+            {id: 32, text: "The Floor is... Fine: For 2 minutes, move around by taking comically large, exaggerated steps.", category: "Locomotion Anomaly"},
+            {id: 33, text: "The Serpent's Keeper: Carry the specific giant snake from the couch for 30 minutes, then return it.", category: "Familiar Handling"},
+            {id: 34, text: "The Squadron Leader: Make 3 paper airplanes and get 3 different people to launch them at the same time.", category: "Aeronautical Command"},
+            {id: 35, text: "The Basement Bar Champion: Go to the pull-up bar and do as many pull-ups as you can. If you can't do one, give it your absolute best honest attempt.", category: "Strength Test"},
+            {id: 36, text: "The Dizzy Prophet: Spin around until dizzy, then deliver a prophecy to the first person you see.", category: "Divination Ritual"},
+            {id: 37, text: "The Name-Tip-Toer: Whenever anyone says your name, rise onto your tip toes for 10 seconds. Curse lasts until you've done this for 5 different people.", category: "Name-based Compulsion"},
+            {id: 38, text: "The Spell Caster: 'Cast a spell' on three people with a gesture and a magic word.", category: "Arcane Gestures"},
+            {id: 39, text: "The Universal Remote: Use a small object as a 'remote' to subtly 'control' someone.", category: "Mind Influence"},
+            {id: 40, text: "The Human Statue: Stand perfectly still against a wall for 5 minutes.", category: "Stillness Discipline"},
+            {id: 41, text: "The Unexplained Face: Make a weird face for ten minutes and refuse to explain.", category: "Facial Anomaly"},
+            {id: 42, text: "The Gifter: Gift a mundane object to someone as if it's a priceless treasure.", category: "Object Transmutation"},
+            {id: 43, text: "The Tour Guide: Give a stranger a 60-second 'tour' of a very small, mundane area.", category: "Spatial Recontextualization"},
+            {id: 44, text: "The Tech-Deck Pro: Do finger motions like you're fingerboarding and say things like 'I'm actually so sick at tech-deck' and 'Do you think it's hot when people are sick at tech-deck?'", category: "Skill Performance"},
+            {id: 45, text: "The Renamer: For the rest of the night, refer to one common object by a wrong name. Complete after using the new name with 5 different people.", category: "Linguistic Subversion"},
+            {id: 46, text: "The Vampire's Curse: You cannot pass through any doorframe unless someone on the other side verbally invites you to enter. Curse lasts until you've entered 5 different rooms.", category: "Threshold Compulsion"},
+            {id: 47, text: "The Mummy's Binding: You cannot use your thumbs. Keep them tucked into your palms. Complete any three tasks without using them.", category: "Digital Limitation"},
+            {id: 48, text: "The Gorgon's Gaze: You cannot make eye contact. Look at people's foreheads or mouths when speaking until you've spoken to 5 people.", category: "Visual Avoidance"},
+            {id: 49, text: "The Confidant: Find an inanimate object and whisper a genuine secret to it. This is for you alone - no one else needs to notice.", category: "Confessional Ritual"},
+            {id: 50, text: "The Quiet Moment: Find a place to sit and legitimately, earnestly meditate on peace and compassion for 2 full minutes.", category: "Internal Focus"},
+            {id: 51, text: "The Catfish: Talk about your 'cat,' then show a picture from a Google image search.", category: "Digital Deception"},
+            {id: 52, text: "The Catfish (Duplicate): Talk about your 'cat,' then show a picture from a Google image search.", category: "Digital Deception"},
+            {id: 53, text: "The Catfish (Duplicate 2): Talk about your 'cat,' then show a picture from a Google image search.", category: "Digital Deception"},
+            {id: 54, text: "The Paparazzo: Take a 'candid' photo of 5 different people without them noticing.", category: "Covert Photography"},
+            {id: 55, text: "The Director: Gather 3 strangers, stage a famous scene, and take a photo.", category: "Scene Direction"},
+            {id: 56, text: "The Food Critic: Photograph a gross food/drink combo and get a 'professional opinion.'", category: "Gastronomic Documentation"},
+            {id: 57, text: "The Archivist: Get a photo of yourself with 3 people you've never met.", category: "Social Documentation"},
+            {id: 58, text: "The Witness: Take a blurry, 'Bigfoot-style' photo of someone doing their secret mission.", category: "Cryptid Documentation"},
+            {id: 59, text: "The Documentarian: Take 25 different photos throughout this party to create a visual record of the night.", category: "Event Documentation"},
+            {id: 60, text: "The Saboteur: Find the person doing The Banana Obsession mission and subtly prevent them from completing it without revealing you're sabotaging them.", category: "Counter-Operation"},
+            {id: 61, text: "The Guardian: Protect a specific object for 30 minutes.", category: "Asset Protection"},
+            {id: 62, text: "The Investigator: Learn a stranger's first pet's name and report it to two others.", category: "Information Gathering"},
+            {id: 63, text: "The Birthday Anarchist: Start and lead a full 'Happy Birthday' song for someone whose birthday it absolutely is not. Get at least 5 people to join in.", category: "Temporal Subversion"},
+            {id: 64, text: "The Nouveau Riche / The Insider: For the next 5 people you talk to, casually mention either 'I have a lot of money' or 'I have high-up contacts in the federal government.'", category: "Status Projection"},
+            {id: 65, text: "The Synchronicity Seeker: Successfully say the exact same word at the exact same time as someone else, completely unplanned, three separate times.", category: "Mental Synchronization"},
+            {id: 66, text: "The Family Ambassador: Call a family member or close friend and have them talk to a stranger at this party for at least one minute.", category: "Social Bridging"},
+            {id: 67, text: "The Hydro Hustler: Fill an empty alcoholic beverage container with water and chug the entire thing publicly in one go.", category: "Public Consumption"},
+            {id: 68, text: "The Prank Caller: Step outside and make a prank call to a friend or family member, maintaining the prank for at least 60 seconds.", category: "Telephonic Deception"},
+            {id: 69, text: "The Hawk Tuah Evangelist: Text someone else at this party a link to a 'hawk tuah' video with the message: 'I still think this is so funny.'", category: "Memetic Transmission"},
+            {id: 70, text: "The Procrastination Buster: Make a genuine commitment to do one real-life task you've been procrastinating on. Set a daily alarm in your phone right now with a reminder to work on it.", category: "Self-Improvement"},
+            {id: 71, text: "The Whistling Mariner: Let out three long, loud, piercing whistles—as loud and as long as you can sustain each one. Space them out by at least one minute.", category: "Auditory Disturbance"},
+            {id: 72, text: "The Golden Frog: Somewhere in this house, there is a hidden golden frog. Find it and show it to either wizard to claim your prize!", category: "Treasure Hunt"},
+            {id: 73, text: "The Challenger: Challenge someone to an arm wrestling match and either win or last for at least 30 seconds without being defeated.", category: "Physical Challenge"},
+            {id: 74, text: "The Secret Admirer: Leave three anonymous, genuine compliments written on sticky notes in hidden places for three different people to find.", category: "Anonymous Affirmation"},
+            {id: 75, text: "The Cartographer: Draw a simple 'treasure map' of the house on a napkin, hide a small object, and give the map to a stranger to find it.", category: "Cartographic Deception"},
+            {id: 76, text: "The Translator: You can only speak in a fictional language of gibberish. Use gestures and expressive sounds to communicate until you successfully get someone to bring you a drink.", category: "Linguistic Barrier"},
+            {id: 77, text: "The Fact Checker: Listen to someone make any statement, then immediately pull out your phone and say 'Let me fact-check that.' After a dramatic pause, declare 'The experts confirm it' regardless of what you find.", category: "Information Verification"},
+            {id: 78, text: "The Interpreter: Find two people having a conversation and stand near them, providing 'translations' of what they're saying to anyone who will listen.", category: "Conversational Mediation"}
+        ];
+
+        // Device tracking and mission logic
+        // Codename management functions
+        function showCodenameEditor() {
+            const currentName = getOperativeName();
+            document.getElementById('newCodename').value = currentName;
+            document.getElementById('codenameEditor').style.display = 'flex';
+        }
+
+        function hideCodenameEditor() {
+            document.getElementById('codenameEditor').style.display = 'none';
+        }
+
+        async function updateCodename() {
+            const newCodename = document.getElementById('newCodename').value.trim();
+            
+            if (!newCodename) {
+                alert('Please enter a codename!');
+                return;
+            }
+            
+            if (newCodename.length < 2) {
+                alert('Codename must be at least 2 characters!');
+                return;
+            }
+
+            // Update locally
+            localStorage.setItem('arcaneOperativeName', newCodename);
+            document.getElementById('currentCodename').textContent = newCodename;
+            
+            // Update on server if available
+            const operativeId = getOperativeId();
+            try {
+                await fetch('/api/missions/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        operativeId: operativeId, 
+                        name: newCodename 
+                    })
+                });
+            } catch (error) {
+                console.log('Server update failed, using local name only');
+            }
+            
+            hideCodenameEditor();
+            showStatus('Codename updated!', 'completed');
+        }
+
+        // Device tracking and mission logic
+        function getOperativeId() {
+            return localStorage.getItem('arcaneOperativeId') || 'op_unknown';
+        }
+
+        function getOperativeName() {
+            let name = localStorage.getItem('arcaneOperativeName');
+            if (!name) {
+                // Generate a fallback name if none exists
+                const fallbackNames = ['Ghost', 'Shadow', 'Phantom', 'Raven', 'Vortex'];
+                name = fallbackNames[Math.floor(Math.random() * fallbackNames.length)] + ' ' + Math.floor(Math.random() * 1000);
+                localStorage.setItem('arcaneOperativeName', name);
+            }
+            return name;
+        }
+
+        let currentMission = null;
+
+       async function getRandomMission() {
+    const operativeId = getOperativeId();
+    const activeMission = localStorage.getItem(`activeMission_${operativeId}`);
+    
+    if (activeMission) {
+        currentMission = JSON.parse(activeMission);
+        displayMission(currentMission);
+        showStatus("You already have an active ritual. Complete it before summoning another.", "error");
+        return;
+    }
+
+    const completedMissions = JSON.parse(localStorage.getItem(`completedMissions_${operativeId}`) || '[]');
+    
+    // NEW: Track which mission TEXTS have been completed (not just IDs)
+    const completedMissionTexts = JSON.parse(localStorage.getItem(`completedMissionTexts_${operativeId}`) || '[]');
+    
+    // Filter out completed missions by both ID AND text content
+    const availableMissions = missions.filter(mission => {
+        const notCompletedById = !completedMissions.includes(mission.id);
+        const notCompletedByText = !completedMissionTexts.includes(mission.text);
+        return notCompletedById && notCompletedByText;
+    });
+    
+    if (availableMissions.length === 0) {
+        showStatus("The veil is thin. You've completed all available arcane operations.", "completed");
+        return;
+    }
+
+    // Try server first, fall back to client
+    try {
+        const response = await fetch(`/api/missions/get-mission?operativeId=${operativeId}&completed=${JSON.stringify(completedMissions)}&completedTexts=${JSON.stringify(completedMissionTexts)}`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.mission) {
+                currentMission = data.mission;
+            } else {
+                throw new Error('No mission from server');
+            }
+        } else {
+            throw new Error('Server unavailable');
+        }
+    } catch (error) {
+        // Fallback to client-side selection
+        const randomIndex = Math.floor(Math.random() * availableMissions.length);
+        currentMission = availableMissions[randomIndex];
+    }
+    
+    localStorage.setItem(`activeMission_${operativeId}`, JSON.stringify(currentMission));
+    displayMission(currentMission);
+    updateButtonStates();
+    showStatus("Arcane ritual received. The summoning begins...", "completed");
+}
+
+       async function completeMission() {
+    if (!currentMission) return;
+
+    const operativeId = getOperativeId();
+    
+    try {
+        const response = await fetch('/api/missions/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                operativeId, 
+                missionId: currentMission.id,
+                missionText: currentMission.text  // NEW: Send text to server too
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            updateScore(data.completed);
+        }
+    } catch (error) {
+        // Server failed, use client-side tracking
+        console.log('Server completion failed, using client-side');
+    }
+
+    // Update local storage regardless
+    const completedMissions = JSON.parse(localStorage.getItem(`completedMissions_${operativeId}`) || '[]');
+    completedMissions.push(currentMission.id);
+    localStorage.setItem(`completedMissions_${operativeId}`, JSON.stringify(completedMissions));
+    
+    // NEW: Also track completed mission texts
+    const completedMissionTexts = JSON.parse(localStorage.getItem(`completedMissionTexts_${operativeId}`) || '[]');
+    completedMissionTexts.push(currentMission.text);
+    localStorage.setItem(`completedMissionTexts_${operativeId}`, JSON.stringify(completedMissionTexts));
+    
+    localStorage.removeItem(`activeMission_${operativeId}`);
+    
+    updateScore(completedMissions.length);
+    showStatus(`Ritual complete. The entity grows stronger. Total: ${completedMissions.length}`, "completed");
+    
+    // Reset UI
+    document.getElementById('missionText').innerHTML = "Your arcane assignment awaits...<br><span style='color: #e91e63; font-size: 0.9em;'>(Should you choose to accept it)</span>";
+    document.querySelector('.mission-category').textContent = "Awaiting Directive";
+    currentMission = null;
+    updateButtonStates();
+}
+
+        function displayMission(mission) {
+            document.getElementById('missionText').textContent = mission.text;
+            document.querySelector('.mission-category').textContent = mission.category;
+        }
+
+        function updateButtonStates() {
+            const operativeId = getOperativeId();
+            const hasActiveMission = !!localStorage.getItem(`activeMission_${operativeId}`);
+            document.getElementById('getMissionBtn').disabled = hasActiveMission;
+            document.getElementById('completeBtn').disabled = !hasActiveMission;
+        }
+
+        function updateScore(score) {
+            document.getElementById('scoreValue').textContent = score;
+        }
+
+        function showStatus(message, type) {
+            const statusElement = document.getElementById('statusMessage');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+            
+            setTimeout(() => {
+                statusElement.textContent = '';
+            }, 5000);
+        }
+
+        async function updateLeaderboard() {
+            try {
+                const response = await fetch('/api/missions/leaderboard');
+                if (response.ok) {
+                    const leaderboard = await response.json();
+                    displayLeaderboard(leaderboard);
+                }
+            } catch (error) {
+                // Server unavailable, show placeholder
+                document.getElementById('leaderboardList').innerHTML = 
+                    '<div style="text-align: center; color: #666; padding: 20px;">Scrying orb malfunction... try again later</div>';
+            }
+        }
+
+        function displayLeaderboard(leaderboard) {
+            const leaderboardList = document.getElementById('leaderboardList');
+            
+            if (leaderboard.length === 0) {
+                leaderboardList.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">No summoners yet... be the first!</div>';
+                return;
+            }
+            
+            leaderboardList.innerHTML = leaderboard.slice(0, 10).map((operative, index) => `
+                <div class="leaderboard-item">
+                    <div class="leaderboard-rank">${index + 1}.</div>
+                    <div class="leaderboard-name">${operative.name}</div>
+                    <div class="leaderboard-score">${operative.completed} rituals</div>
+                </div>
+            `).join('');
+        }
+
+        // Initialize
+        window.onload = function() {
+            const operativeId = getOperativeId();
+            const completedMissions = JSON.parse(localStorage.getItem(`completedMissions_${operativeId}`) || '[]');
+            updateScore(completedMissions.length);
+            
+            // ADD THIS LINE - Set the codename display
+            document.getElementById('currentCodename').textContent = getOperativeName();
+            
+            const activeMission = localStorage.getItem(`activeMission_${operativeId}`);
+            if (activeMission) {
+                currentMission = JSON.parse(activeMission);
+                displayMission(currentMission);
+            }
+            updateButtonStates();
+            updateLeaderboard();
+            
+            // Update leaderboard every 30 seconds
+            setInterval(updateLeaderboard, 30000);
+        }
+    </script>
+</body>
+</html>

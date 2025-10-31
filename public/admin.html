@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Karaoke Admin</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .admin-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 15px 0;
+        }
+
+        .current-song {
+            background: #e8f5e8;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        button {
+            background: #e91e63;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0 5px 10px 5px;
+        }
+
+        button:hover {
+            background: #d81b60;
+        }
+
+        .clear-btn {
+            background: #ff4444;
+        }
+
+        .add-top-btn {
+            background: #4CAF50;
+        }
+
+        .mission-btn {
+            background: #9c27b0;
+        }
+
+        .manual-btn {
+            background: #ff9800;
+        }
+
+        .manual-btn:hover {
+            background: #f57c00;
+        }
+
+        .search-button {
+            background: #2196F3;
+            width: auto;
+            padding: 12px 20px;
+        }
+
+        .search-button:hover {
+            background: #1976D2;
+        }
+
+        .queue-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .queue-info {
+            flex: 1;
+        }
+
+        .queue-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .small-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .small-btn.remove {
+            background: #ff4444;
+            color: white;
+        }
+
+        .small-btn.move {
+            background: #2196F3;
+            color: white;
+        }
+
+        .song-title {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .admin-badge {
+            background: #ff9800;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        /* Mission Leaderboard Styles */
+        .mission-leaderboard {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            background: #fafafa;
+            margin: 5px 0;
+            border-radius: 8px;
+        }
+
+        .leaderboard-rank {
+            font-weight: bold;
+            color: #e91e63;
+            width: 30px;
+            text-align: center;
+        }
+
+        .leaderboard-name {
+            flex: 1;
+            font-weight: 600;
+        }
+
+        .leaderboard-score {
+            font-weight: bold;
+            color: #4CAF50;
+            width: 80px;
+            text-align: center;
+        }
+
+        .leaderboard-mission {
+            color: #666;
+            font-size: 0.8em;
+            font-style: italic;
+            margin-top: 3px;
+        }
+
+        .mission-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #9c27b0;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #9c27b0;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* Active Missions Section */
+        .active-missions {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .active-mission-item {
+            background: #fff3e0;
+            border: 1px solid #ff9800;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+        }
+
+        .mission-category {
+            background: #9c27b0;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            margin-right: 10px;
+        }
+
+        /* Search styles */
+        .search-container {
+            position: relative;
+            margin: 10px 0;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e91e63;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .search-result {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .search-result:hover {
+            background: #f9f9f9;
+        }
+
+        .search-result:last-child {
+            border-bottom: none;
+        }
+
+        .result-thumbnail {
+            width: 80px;
+            height: 60px;
+            border-radius: 4px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .result-info {
+            flex: 1;
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .result-channel {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .selected-song {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 2px solid #4CAF50;
+        }
+
+        .manual-input-section {
+            background: #fff8e1;
+            border: 2px solid #ff9800;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .quota-status {
+            text-align: center;
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .quota-good {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #4CAF50;
+        }
+
+        .quota-warning {
+            background: #fff3e0;
+            color: #f57c00;
+            border: 1px solid #ff9800;
+        }
+
+        .quota-exceeded {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #f44336;
+        }
+
+        .search-warning {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 12px 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #e91e63;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            display: none;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+            display: none;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab {
+            padding: 12px 25px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            color: #e91e63;
+            border-bottom-color: #e91e63;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎤 Karaoke Admin Control</h1>
+        <p>Manage the song queue and mission system</p>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('karaoke')">🎵 Karaoke Queue</button>
+        <button class="tab" onclick="showTab('missions')">🔮 Mission Control</button>
+    </div>
+
+    <!-- Karaoke Tab -->
+    <div id="karaoke-tab" class="tab-content active">
+        <!-- Quota Status Display -->
+        <div id="quotaStatus" class="quota-status quota-good">
+            Checking search availability...
+        </div>
+
+        <div id="currentSong" class="current-song">
+            <h2>No song currently playing</h2>
+        </div>
+
+        <div class="search-warning">
+            <strong>⚠️ Search Tips:</strong><br>
+            • Search is limited - use manual URL if search fails<br>
+            • Manual URL bypasses quota limits
+        </div>
+
+        <div class="admin-section">
+            <h3>🎯 Quick Actions</h3>
+            <button onclick="nextSong()">⏭️ Next Song</button>
+            <button onclick="showAddToTop()" class="add-top-btn">🎤 Add to Top (Search)</button>
+            <button onclick="showManualInput()" class="manual-btn">🔧 Add via URL</button>
+            <button onclick="clearQueue()" class="clear-btn">🗑️ Clear Queue</button>
+            <button onclick="forceRefreshQueue()" style="background: #2196F3;">🔄 Refresh Queue</button>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="admin-section">
+            <h3>📡 Connection Status</h3>
+            <div id="connectionStatus" style="padding: 10px; border-radius: 4px; background: #f5f5f5;">
+                Checking connection...
+            </div>
+        </div>
+
+        <!-- Add to Top Section -->
+        <div id="addToTopSection" class="admin-section" style="display: none;">
+            <h3>🎤 Add Song to Top (Search)</h3>
+            
+            <div class="form-group">
+                <label for="adminSingerName">Singer Name</label>
+                <input type="text" id="adminSingerName" placeholder="Enter singer name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="adminSongSearch">Search for a Song</label>
+                <div class="search-container">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="adminSongSearch" placeholder="Type song name and press ENTER..." autocomplete="off" style="flex: 1;">
+                        <button onclick="performAdminManualSearch()" class="search-button">
+                            🔍 Search
+                        </button>
+                    </div>
+                    <div id="adminSearchResults" class="search-results"></div>
+                </div>
+            </div>
+            
+            <div id="adminSelectedSong" class="selected-song" style="display: none;">
+                <strong>Selected Song:</strong>
+                <div id="adminSelectedSongTitle"></div>
+                <button onclick="clearAdminSelection()" style="background: #666; margin-top: 10px; padding: 8px 15px; font-size: 14px;">
+                    Change Song
+                </button>
+            </div>
+            
+            <button id="adminSubmitBtn" onclick="addToTop()" disabled>Add to Top of Queue</button>
+            <button onclick="hideAddToTop()" style="background: #666;">Cancel</button>
+            
+            <div id="adminSuccessMessage" class="success-message">
+                ✅ Song added to top of queue!
+            </div>
+            
+            <div id="adminErrorMessage" class="error-message">
+                Error adding song to queue
+            </div>
+        </div>
+
+        <!-- Manual YouTube URL Input -->
+        <div id="manualInputSection" class="manual-input-section">
+            <h3>🔧 Manual YouTube URL</h3>
+            <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">
+                Bypass search limits by pasting any YouTube URL:
+            </p>
+            
+            <div class="form-group">
+                <label for="manualSingerName">Singer Name</label>
+                <input type="text" id="manualSingerName" placeholder="Enter singer name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="adminYoutubeUrl">YouTube URL</label>
+                <input type="text" id="adminYoutubeUrl" placeholder="https://www.youtube.com/watch?v=..." style="font-family: monospace;">
+            </div>
+            
+            <button onclick="validateAdminManualVideo()" class="manual-btn">Validate & Add to Queue</button>
+            <button onclick="hideManualInput()" style="background: #666;">Cancel</button>
+            
+            <div id="adminManualValidationMessage" style="margin-top: 10px; padding: 10px; border-radius: 4px; display: none;"></div>
+        </div>
+
+        <div class="admin-section">
+            <h3>📋 Queue Management (<span id="queueCount">0</span> songs)</h3>
+            <div id="queueList" class="loading">
+                Loading queue...
+            </div>
+        </div>
+    </div>
+
+    <!-- Missions Tab -->
+    <div id="missions-tab" class="tab-content">
+        <div class="admin-section">
+            <h3>🔮 Mission System Overview</h3>
+            <button onclick="refreshMissionData()" class="mission-btn">🔄 Refresh Mission Data</button>
+            <div class="mission-stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalOperatives">0</div>
+                    <div class="stat-label">Active Operatives</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCompletions">0</div>
+                    <div class="stat-label">Rituals Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="activeMissionsCount">0</div>
+                    <div class="stat-label">Active Missions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="uniqueMissions">78</div>
+                    <div class="stat-label">Available Rituals</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h3>🏆 Mission Leaderboard</h3>
+            <div id="missionLeaderboard" class="mission-leaderboard">
+                <div class="loading">Loading mission data...</div>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h3>🎯 Currently Active Missions</h3>
+            <div id="activeMissions" class="active-missions">
+                <div class="loading">Loading active missions...</div>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h3>📊 Mission Completion History</h3>
+            <div id="missionHistory">
+                <div class="loading">Loading mission history...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let selectedVideo = null;
+        let searchTimeout = null;
+        let searchQuotaExceeded = false;
+
+        // Initialize socket connection
+        socket.on('connect', () => {
+            updateConnectionStatus('✅ Connected to server', 'green');
+        });
+
+        socket.on('disconnect', () => {
+            updateConnectionStatus('❌ Disconnected from server', 'red');
+        });
+
+        socket.on('connect_error', () => {
+            updateConnectionStatus('⚠️ Connection failed', 'orange');
+        });
+
+        function updateConnectionStatus(message, color) {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.innerHTML = `<span style="color: ${color}; font-weight: bold;">${message}</span>`;
+        }
+
+        // Check quota status
+        async function checkQuotaStatus() {
+            try {
+                const response = await fetch('/api/quota-status');
+                const quota = await response.json();
+                
+                const quotaElement = document.getElementById('quotaStatus');
+                if (quota.exceeded) {
+                    quotaElement.textContent = '🔴 Search unavailable - Use manual URL input';
+                    quotaElement.className = 'quota-status quota-exceeded';
+                    searchQuotaExceeded = true;
+                } else {
+                    const searchesLeft = Math.floor(quota.remaining / 100);
+                    
+                    if (searchesLeft <= 3) {
+                        quotaElement.textContent = `🟡 Very low - ${searchesLeft} search${searchesLeft === 1 ? '' : 'es'} left`;
+                        quotaElement.className = 'quota-status quota-warning';
+                    } else if (searchesLeft <= 10) {
+                        quotaElement.textContent = `🟡 Limited - ${searchesLeft} searches left`;
+                        quotaElement.className = 'quota-status quota-warning';
+                    } else {
+                        quotaElement.textContent = `🟢 Ready - ${searchesLeft}+ searches available`;
+                        quotaElement.className = 'quota-status quota-good';
+                    }
+                    searchQuotaExceeded = false;
+                }
+            } catch (error) {
+                document.getElementById('quotaStatus').textContent = '⚠️ Could not check search status';
+            }
+        }
+
+        // Enter to search in admin
+        document.getElementById('adminSongSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performAdminSearch(e.target.value);
+            }
+        });
+
+        // Clear results when typing
+        document.getElementById('adminSongSearch').addEventListener('input', function(e) {
+            const resultsDiv = document.getElementById('adminSearchResults');
+            if (e.target.value.length < 2) {
+                resultsDiv.style.display = 'none';
+            }
+        });
+
+        function performAdminManualSearch() {
+            const query = document.getElementById('adminSongSearch').value.trim();
+            if (query.length < 2) {
+                alert('Please enter at least 2 characters to search');
+                return;
+            }
+            performAdminSearch(query);
+        }
+
+        // Manual input functions
+        function showManualInput() {
+            document.getElementById('manualInputSection').style.display = 'block';
+            document.getElementById('addToTopSection').style.display = 'none';
+        }
+
+        function hideManualInput() {
+            document.getElementById('manualInputSection').style.display = 'none';
+            document.getElementById('adminYoutubeUrl').value = '';
+            document.getElementById('manualSingerName').value = '';
+            document.getElementById('adminManualValidationMessage').style.display = 'none';
+        }
+
+        function extractYouTubeId(url) {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        async function validateAdminManualVideo() {
+            const youtubeUrl = document.getElementById('adminYoutubeUrl').value.trim();
+            const singer = document.getElementById('manualSingerName').value.trim();
+            const messageElement = document.getElementById('adminManualValidationMessage');
+            
+            if (!youtubeUrl) {
+                showAdminManualMessage('Please enter a YouTube URL', 'error');
+                return;
+            }
+
+            if (!singer) {
+                showAdminManualMessage('Please enter singer name first', 'error');
+                return;
+            }
+
+            showAdminManualMessage('Adding to queue...', 'loading');
+
+            const videoId = extractYouTubeId(youtubeUrl);
+            if (!videoId) {
+                showAdminManualMessage('❌ Could not extract video ID from URL', 'error');
+                return;
+            }
+
+            await addAdminManualVideoToQueue(videoId, `Manual Video (${videoId})`, singer);
+        }
+
+        function showAdminManualMessage(message, type) {
+            const messageElement = document.getElementById('adminManualValidationMessage');
+            messageElement.textContent = message;
+            messageElement.style.display = 'block';
+            messageElement.style.background = type === 'success' ? '#e8f5e8' : 
+                                            type === 'error' ? '#ffebee' : 
+                                            type === 'warning' ? '#fff3e0' : '#f5f5f5';
+            messageElement.style.color = type === 'success' ? '#2e7d32' : 
+                                       type === 'error' ? '#c62828' : 
+                                       type === 'warning' ? '#f57c00' : '#666';
+            messageElement.style.border = type === 'success' ? '1px solid #4CAF50' : 
+                                        type === 'error' ? '1px solid #f44336' : 
+                                        type === 'warning' ? '1px solid #ff9800' : '1px solid #ddd';
+        }
+
+        async function addAdminManualVideoToQueue(videoId, title, singer) {
+            try {
+                const response = await fetch('/api/add-to-top', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        singer: singer,
+                        youtubeUrl: `https://www.youtube.com/watch?v=${videoId}`,
+                        songTitle: title
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAdminManualMessage(`✅ Added ${singer} to top of queue!`, 'success');
+                    document.getElementById('adminYoutubeUrl').value = '';
+                    document.getElementById('manualSingerName').value = '';
+                    setTimeout(() => {
+                        hideManualInput();
+                    }, 2000);
+                } else {
+                    showAdminManualMessage('Error: ' + (data.error || 'Failed to add to queue'), 'error');
+                }
+            } catch (error) {
+                console.error('Add to top error:', error);
+                showAdminManualMessage('Error submitting request', 'error');
+            }
+        }
+
+        // Tab management
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'missions') {
+                refreshMissionData();
+            }
+        }
+
+        // Mission data functions
+        async function refreshMissionData() {
+            try {
+                const response = await fetch('/api/missions/admin-data');
+                const data = await response.json();
+                updateMissionDashboard(data);
+            } catch (error) {
+                console.error('Failed to fetch mission data:', error);
+                document.getElementById('missionLeaderboard').innerHTML = 
+                    '<div class="error-message">Failed to load mission data</div>';
+            }
+        }
+
+        function updateMissionDashboard(data) {
+            document.getElementById('totalOperatives').textContent = data.totalOperatives || 0;
+            document.getElementById('totalCompletions').textContent = data.totalCompletions || 0;
+            document.getElementById('activeMissionsCount').textContent = data.operatives.filter(op => op.currentMission).length;
+
+            const leaderboard = document.getElementById('missionLeaderboard');
+            if (data.operatives && data.operatives.length === 0) {
+                leaderboard.innerHTML = '<div class="loading">No operatives yet</div>';
+            } else if (data.operatives) {
+                leaderboard.innerHTML = data.operatives
+                    .sort((a, b) => b.completed - a.completed)
+                    .map((operative, index) => `
+                        <div class="leaderboard-item">
+                            <div class="leaderboard-rank">${index + 1}</div>
+                            <div class="leaderboard-info">
+                                <div class="leaderboard-name">${operative.name}</div>
+                                ${operative.currentMission ? 
+                                    `<div class="leaderboard-mission">Active: ${operative.currentMission.text || operative.currentMission.name}</div>` : 
+                                    ''}
+                            </div>
+                            <div class="leaderboard-score">${operative.completed} rituals</div>
+                        </div>
+                    `).join('');
+            }
+
+            const activeMissions = document.getElementById('activeMissions');
+            const activeOps = data.operatives ? data.operatives.filter(op => op.currentMission) : [];
+            if (activeOps.length === 0) {
+                activeMissions.innerHTML = '<div class="loading">No active missions</div>';
+            } else {
+                activeMissions.innerHTML = activeOps.map(operative => `
+                    <div class="active-mission-item">
+                        <strong>${operative.name}</strong>
+                        <span class="mission-category">${operative.currentMission.category || 'Unknown'}</span>
+                        <div class="song-title">${operative.currentMission.text || operative.currentMission.name}</div>
+                        <small>Total completions: ${operative.completed} | Joined: ${new Date(operative.joinTime).toLocaleTimeString()}</small>
+                    </div>
+                `).join('');
+            }
+
+            const missionHistory = document.getElementById('missionHistory');
+            if (data.history && data.history.length === 0) {
+                missionHistory.innerHTML = '<div class="loading">No mission history yet</div>';
+            } else if (data.history) {
+                missionHistory.innerHTML = `
+                    <div style="max-height: 200px; overflow-y: auto;">
+                        ${data.history.slice(-10).reverse().map(completion => `
+                            <div style="padding: 8px; border-bottom: 1px solid #eee; font-size: 0.9em;">
+                                <strong>${completion.operativeName}</strong> completed mission 
+                                <em>${completion.missionId}</em> at ${new Date(completion.timestamp).toLocaleTimeString()}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        }
+
+        // Socket updates for missions
+        socket.on('missionLeaderboardUpdate', (leaderboard) => {
+            if (document.getElementById('missions-tab').classList.contains('active')) {
+                refreshMissionData();
+            }
+        });
+
+        // Queue management functions
+        function showAddToTop() {
+            document.getElementById('addToTopSection').style.display = 'block';
+            document.getElementById('manualInputSection').style.display = 'none';
+        }
+
+        function hideAddToTop() {
+            document.getElementById('addToTopSection').style.display = 'none';
+            clearAdminSelection();
+        }
+
+        async function performAdminSearch(query) {
+            const resultsDiv = document.getElementById('adminSearchResults');
+            
+            if (query.length < 2) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="loading">Searching...</div>';
+            resultsDiv.style.display = 'block';
+
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                
+                if (response.status === 429) {
+                    resultsDiv.innerHTML = `
+                        <div style="text-align: center; padding: 20px; color: #ff4444;">
+                            <strong>Search Quota Exceeded</strong><br>
+                            <span style="font-size: 0.9em;">Use the manual URL input to add songs.</span>
+                        </div>
+                    `;
+                    searchQuotaExceeded = true;
+                    showManualInput();
+                    return;
+                }
+
+                const videos = await response.json();
+                
+                if (videos.length === 0) {
+                    resultsDiv.innerHTML = '<div class="loading">No embeddable videos found</div>';
+                    return;
+                }
+                
+                resultsDiv.innerHTML = '';
+                videos.forEach(video => {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'search-result';
+                    resultDiv.innerHTML = `
+                        <img src="${video.thumbnail}" class="result-thumbnail" alt="Thumbnail">
+                        <div class="result-info">
+                            <div class="result-title">${video.title}</div>
+                            <div class="result-channel">${video.channel}</div>
+                        </div>
+                    `;
+                    resultDiv.onclick = () => selectAdminVideo(video);
+                    resultsDiv.appendChild(resultDiv);
+                });
+            } catch (error) {
+                console.error('Search error:', error);
+                resultsDiv.innerHTML = '<div class="loading">Search failed. Try again.</div>';
+            }
+        }
+
+        function selectAdminVideo(video) {
+            selectedVideo = video;
+            document.getElementById('adminSelectedSongTitle').textContent = video.title;
+            document.getElementById('adminSelectedSong').style.display = 'block';
+            document.getElementById('adminSearchResults').style.display = 'none';
+            document.getElementById('adminSongSearch').value = '';
+            updateAdminSubmitButton();
+        }
+
+        function clearAdminSelection() {
+            selectedVideo = null;
+            document.getElementById('adminSelectedSong').style.display = 'none';
+            document.getElementById('adminSingerName').value = '';
+            document.getElementById('adminSubmitBtn').disabled = true;
+        }
+
+        function updateAdminSubmitButton() {
+            const singer = document.getElementById('adminSingerName').value.trim();
+            document.getElementById('adminSubmitBtn').disabled = !(singer && selectedVideo);
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                document.getElementById('adminSearchResults').style.display = 'none';
+            }
+        });
+
+        async function addToTop() {
+            const singer = document.getElementById('adminSingerName').value.trim();
+            
+            if (!singer || !selectedVideo) {
+                showAdminError('Please enter singer name and select a song');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/add-to-top', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        singer: singer,
+                        youtubeUrl: `https://www.youtube.com/watch?v=${selectedVideo.id}`,
+                        songTitle: selectedVideo.title
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAdminSuccess(`✅ Added ${singer} to top of queue!`);
+                    clearAdminSelection();
+                    hideAddToTop();
+                } else {
+                    showAdminError('Error: ' + (data.error || 'Failed to add to queue'));
+                }
+            } catch (error) {
+                console.error('Add to top error:', error);
+                showAdminError('Error submitting request');
+            }
+        }
+
+        function showAdminSuccess(message) {
+            const successMsg = document.getElementById('adminSuccessMessage');
+            successMsg.textContent = message;
+            successMsg.style.display = 'block';
+            document.getElementById('adminErrorMessage').style.display = 'none';
+            
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 5000);
+        }
+
+        function showAdminError(message) {
+            const errorMsg = document.getElementById('adminErrorMessage');
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            document.getElementById('adminSuccessMessage').style.display = 'none';
+            
+            setTimeout(() => {
+                errorMsg.style.display = 'none';
+            }, 5000);
+        }
+
+        // Queue control functions
+        function nextSong() {
+            fetch('/api/next', { method: 'POST' });
+        }
+
+        function removeSong(id) {
+            if (confirm('Remove this song from queue?')) {
+                fetch(`/api/remove/${id}`, { method: 'POST' });
+            }
+        }
+
+        function moveUp(id) {
+            fetch(`/api/move-up/${id}`, { method: 'POST' });
+        }
+
+        function moveDown(id) {
+            fetch(`/api/move-down/${id}`, { method: 'POST' });
+        }
+
+        function clearQueue() {
+            if (confirm('Clear the entire queue?')) {
+                fetch('/api/clear', { method: 'POST' });
+            }
+        }
+
+        // Socket.io for real-time queue updates
+        socket.on('queueUpdate', (data) => {
+            updateQueueDisplay(data);
+        });
+
+        function updateQueueDisplay(data) {
+            const queueList = document.getElementById('queueList');
+            const currentSong = document.getElementById('currentSong');
+            const queueCount = document.getElementById('queueCount');
+
+            if (data.currentSong) {
+                currentSong.innerHTML = `
+                    <h2>🎵 Now Playing</h2>
+                    <h3>${data.currentSong.singer}</h3>
+                    <p>${data.currentSong.songTitle}</p>
+                    <small>YouTube ID: ${data.currentSong.youtubeId}</small>
+                `;
+            } else {
+                currentSong.innerHTML = '<h2>No song currently playing</h2>';
+            }
+
+            queueCount.textContent = data.queue.length;
+
+            if (data.queue.length === 0) {
+                queueList.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Queue is empty</div>';
+                return;
+            }
+
+            queueList.innerHTML = '';
+            data.queue.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'queue-item';
+                div.innerHTML = `
+                    <div class="queue-info">
+                        <strong>${index + 1}. ${item.singer}</strong>
+                        ${item.addedByAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+                        <div class="song-title">${item.songTitle}</div>
+                        <small>ID: ${item.youtubeId}</small>
+                    </div>
+                    <div class="queue-controls">
+                        ${index > 0 ? `<button class="small-btn move" onclick="moveUp(${item.id})">⬆️ Up</button>` : ''}
+                        ${index < data.queue.length - 1 ? `<button class="small-btn move" onclick="moveDown(${item.id})">⬇️ Down</button>` : ''}
+                        <button class="small-btn remove" onclick="removeSong(${item.id})">❌ Remove</button>
+                    </div>
+                `;
+                queueList.appendChild(div);
+            });
+        }
+
+        // Manual refresh function
+        async function forceRefreshQueue() {
+            try {
+                const response = await fetch('/api/queue-status');
+                const data = await response.json();
+                updateQueueDisplay(data);
+                updateConnectionStatus('✅ Manual refresh successful', 'green');
+            } catch (error) {
+                updateConnectionStatus('❌ Refresh failed: ' + error, 'red');
+            }
+        }
+
+        // Initialize
+        document.getElementById('adminSingerName').addEventListener('input', updateAdminSubmitButton);
+        
+        window.addEventListener('load', function() {
+            checkQuotaStatus();
+            forceRefreshQueue();
+            refreshMissionData();
+        });
+    </script>
+</body>
+</html>
