@@ -309,11 +309,23 @@
         
         <!-- Missions Tab -->
         <div id="missions-tab" class="tab-content active">
-            <div style="background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; padding: 10px; margin-bottom: 15px; text-align: center; border-radius: 5px;">
+            <!-- Missions Tab -->
+<div id="missions-tab" class="tab-content active">
+    <!-- ADD THIS DISMISSIBLE BOOKMARK NOTICE -->
+    <div id="bookmarkNotice" style="background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; padding: 10px; margin-bottom: 15px; text-align: center; border-radius: 5px; position: relative;">
         <strong style="color: #00ff88;">📖 BOOKMARK THIS PAGE!</strong>
         <div style="color: #00ff88; font-size: 0.8em; margin-top: 5px;">
             Save this URL to easily return to your missions throughout the night
         </div>
+        <button onclick="dismissBookmarkNotice()" style="background: transparent; color: #00ff88; border: 1px solid #00ff88; padding: 2px 8px; font-size: 0.7em; margin-top: 5px; border-radius: 3px; cursor: pointer;">
+            Got it
+        </button>
+    </div>
+    
+    <div class="operative-info">
+        <div class="operative-name" id="currentCodename">Loading...</div>
+        <div class="current-score">Rituals: <span id="scoreValue">0</span></div>
+    </div>
     </div>
             <div class="operative-info">
                 <div class="operative-name" id="currentCodename">Loading...</div>
@@ -667,6 +679,32 @@
             
             showStatus("Mission skipped. No points awarded.", "error");
         }
+
+        // Dismiss bookmark notice
+function dismissBookmarkNotice() {
+    const notice = document.getElementById('bookmarkNotice');
+    if (notice) {
+        notice.style.display = 'none';
+    }
+    // Optional: Save preference to localStorage so it doesn't show again
+    localStorage.setItem('bookmarkNoticeDismissed', 'true');
+}
+
+// Check if notice was previously dismissed
+function checkBookmarkNotice() {
+    if (localStorage.getItem('bookmarkNoticeDismissed') === 'true') {
+        const notice = document.getElementById('bookmarkNotice');
+        if (notice) {
+            notice.style.display = 'none';
+        }
+    }
+}
+
+// Call this on page load
+window.onload = function() {
+    // ... your existing onload code ...
+    checkBookmarkNotice(); // Add this line
+}
 
         // Initialize
         window.onload = function() {
