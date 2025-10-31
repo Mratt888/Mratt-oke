@@ -181,6 +181,84 @@
             margin-bottom: 20px;
         }
         
+                /* YouTube Fallback Overlay */
+        .youtube-fallback-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+                url('/images/backgrounds/flier.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: none;
+            flex-direction: column;
+            z-index: 1001;
+        }
+        
+        .fallback-content {
+            background: rgba(30, 30, 30, 0.9);
+            border: 3px solid #ff4444;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            max-width: 600px;
+            margin: 20px;
+        }
+        
+        .fallback-title {
+            font-size: 2.5em;
+            color: #ff4444;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .fallback-message {
+            font-size: 1.8em; /* Much bigger */
+            color: #ffffff;
+            margin-bottom: 30px;
+            line-height: 1.4;
+            font-weight: bold;
+        }
+        
+        .fallback-instruction {
+            color: #ffffff;
+            font-size: 1.4em; /* Much bigger */
+            margin-top: 30px;
+            line-height: 1.5;
+        }
+        
+        .fallback-button {
+            font-size: 1.5em;
+            padding: 20px 40px;
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            font-weight: bold;
+        }
+        
+        .fallback-button:hover {
+            background: linear-gradient(135deg, #cc0000, #aa0000);
+        }
+        
+        .next-singer-button {
+            font-size: 1.2em;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            display: none;
+        }
+        
         .controller-status {
             position: fixed;
             top: 10px;
@@ -189,7 +267,7 @@
             padding: 8px 12px;
             border-radius: 8px;
             font-size: 0.8em;
-            z-index: 1001;
+            z-index: 1002;
             color: white;
         }
         
@@ -255,6 +333,47 @@
         </div>
     </div>
 
+        <!-- YouTube Fallback Overlay -->
+    <div id="youtubeFallbackOverlay" class="youtube-fallback-overlay">
+        <!-- Keep original header visible -->
+        <div class="header" style="background: rgba(0, 0, 0, 0.8);">
+            <div class="current-info">
+                <div class="title-container">
+                    <h1>🎤 Wizards-oke</h1>
+                    <div class="tagline">- we make your singin' dreams come true!</div>
+                </div>
+                <div class="current-song" id="fallbackCurrentSong">Loading...</div>
+            </div>
+            <div class="next-up-info">
+                <div class="next-up-title">🎵 Next Up</div>
+                <div id="fallbackNextUp">
+                    <div class="next-singer" id="fallbackNextSinger">---</div>
+                    <div class="next-song" id="fallbackNextSong">No one in queue</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="fallback-content">
+            <div class="fallback-title">🚫 YouTube Restricted This Video</div>
+            <div class="fallback-message">
+                Some evil record label won't let us embed this video directly.<br>
+                But you can still sing it! Here's the workaround:
+            </div>
+            <button class="fallback-button" onclick="openYouTubePopup()">
+                🎬 OPEN YOUTUBE TO SING
+            </button>
+            <div class="fallback-instruction">
+                • Click above to open YouTube in a popup window<br>
+                • Sing your heart out in the YouTube window<br>
+                • Close the YouTube window when you're done<br>
+                • Then click below to continue the queue
+            </div>
+            <button class="next-singer-button" onclick="nextSinger()" id="nextSingerButton">
+                ➡️ NEXT SINGER
+            </button>
+        </div>
+    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
@@ -263,6 +382,7 @@
         let gamepadIndex = null;
         let isVideoPlaying = false;
         let currentSongData = null;
+        let youtubeWindow = null;
 
         // Load YouTube IFrame API
         const tag = document.createElement('script');
@@ -304,8 +424,16 @@
             }
         }
 
-        // Show the "Start Singing" screen for next singer
+        // Show the appropriate overlay based on playback method
         function showNextSingerScreen() {
+            if (currentSongData && currentSongData.playbackMethod === 'browser') {
+                showYouTubeFallbackOverlay();
+            } else {
+                showNormalStartOverlay();
+            }
+        }
+
+        function showNormalStartOverlay() {
             fetch('/api/next', { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
@@ -319,11 +447,61 @@
                 .catch(err => console.log('Next singer error:', err));
         }
 
+        function showYouTubeFallbackOverlay() {
+            document.getElementById('youtubeFallbackOverlay').style.display = 'flex';
+            document.getElementById('nextSingerButton').style.display = 'none';
+        }
+
+        function openYouTubePopup() {
+    if (!currentSongData) return;
+    
+    const screenWidth = window.screen.width;
+    const screenHeight = window.screen.height;
+    
+    // Theater mode - nearly full screen
+    const popupWidth = Math.floor(screenWidth * 0.9);
+    const popupHeight = Math.floor(screenHeight * 0.85);
+    const left = Math.floor((screenWidth - popupWidth) / 2);
+    const top = Math.floor((screenHeight - popupHeight) / 2);
+    
+    youtubeWindow = window.open(
+        currentSongData.youtubeUrl,
+        'youtubePlayer',
+        `width=${popupWidth},height=${popupHeight},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=no`
+    );
+    
+    if (youtubeWindow) {
+        youtubeWindow.focus();
+        document.getElementById('nextSingerButton').style.display = 'block';
+    }
+}
+
+        function nextSinger() {
+    fetch('/api/next', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('youtubeFallbackOverlay').style.display = 'none';
+            if (data.success) {
+                // The next song is now currentSong - check its playback method
+                if (data.song.playbackMethod === 'browser') {
+                    // Next song ALSO needs fallback - show the overlay again
+                    currentSongData = data.song;
+                    showYouTubeFallbackOverlay();
+                }
+                // If it's embeddable, the normal songStarted event will handle it
+            } else {
+                resetToWaitingState();
+            }
+        })
+        .catch(err => console.log('Next singer error:', err));
+}
+
         function resetToWaitingState() {
             document.querySelector('.current-song').textContent = 'Waiting for the first singer...';
             document.getElementById('waitingMessage').style.display = 'block';
             document.getElementById('player').style.display = 'none';
             document.getElementById('controllerOverlay').style.display = 'none';
+            document.getElementById('youtubeFallbackOverlay').style.display = 'none';
             currentVideoId = null;
             currentSongData = null;
             isVideoPlaying = false;
@@ -375,18 +553,20 @@
                 document.getElementById('waitingMessage').style.display = 'none';
                 document.getElementById('player').style.display = 'block';
                 
-                document.getElementById('upNextSinger').textContent = song.singer;
-                document.getElementById('upNextSong').textContent = song.songTitle;
-                
-                currentVideoId = song.youtubeId;
                 currentSongData = song;
                 
-                document.getElementById('controllerOverlay').style.display = 'flex';
-                document.querySelector('.start-button').focus();
+                if (song.playbackMethod === 'browser') {
+                    showYouTubeFallbackOverlay();
+                } else {
+                    document.getElementById('upNextSinger').textContent = song.singer;
+                    document.getElementById('upNextSong').textContent = song.songTitle;
+                    document.getElementById('controllerOverlay').style.display = 'flex';
+                    document.querySelector('.start-button').focus();
+                }
             }
         });
 
-        // Start the current song
+        // Start the current song (for embeddable videos)
         function startCurrentSong() {
             if (currentVideoId && player && player.loadVideoById && currentSongData) {
                 console.log('Starting song:', currentSongData.singer, currentVideoId);
@@ -418,22 +598,33 @@
             
             if (data.currentSong && !isVideoPlaying) {
                 document.querySelector('.current-song').textContent = data.currentSong.songTitle;
+                currentVideoId = data.currentSong.youtubeId;
+            }
+                        // Update fallback overlay queue info too
+            if (data.queue.length > 0) {
+                const nextSong = data.queue[0];
+                document.getElementById('fallbackNextSinger').textContent = nextSong.singer;
+                document.getElementById('fallbackNextSong').textContent = nextSong.songTitle;
+            } else {
+                document.getElementById('fallbackNextSinger').textContent = '---';
+                document.getElementById('fallbackNextSong').textContent = 'No one in queue';
+            }
+            
+            if (data.currentSong) {
+                document.getElementById('fallbackCurrentSong').textContent = data.currentSong.songTitle;
             }
         });
 
         // Keyboard shortcut
         document.addEventListener('keydown', (event) => {
-            if (event.code === 'Space' && document.getElementById('controllerOverlay').style.display === 'flex') {
+            if (event.code === 'Space') {
                 event.preventDefault();
                 event.stopPropagation();
-                console.log('Spacebar pressed - starting song');
-                startCurrentSong();
-            }
-        });
-
-        document.addEventListener('keydown', (event) => {
-            if (event.code === 'Space' && document.getElementById('controllerOverlay').style.display !== 'flex') {
-                event.preventDefault();
+                
+                if (document.getElementById('controllerOverlay').style.display === 'flex') {
+                    console.log('Spacebar pressed - starting song');
+                    startCurrentSong();
+                }
             }
         }, true);
 

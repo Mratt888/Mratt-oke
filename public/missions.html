@@ -5,32 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arcane Operations</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&family=UnifrakturMaguntia&display=swap');
-      html {
-    scroll-behavior: auto !important;
-}  
-       body {
-    margin: 0;
-    padding: 20px;
-    background: #0a0a0a;
-    color: #e91e63;
-    font-family: 'Courier New', monospace;
-    min-height: 100vh;
-    overflow-x: hidden;
-    /* Remove any position: fixed */
-}
+        @import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&family=MedievalSharp&display=swap');
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #e91e63;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-.container {
-    max-width: 600px;
-    margin: 0 auto;
-    border: 3px double #e91e63;
-    padding: 30px;
-    background: rgba(10, 10, 10, 0.95);
-    position: relative;
-    box-shadow: 0 0 30px rgba(233, 30, 99, 0.3);
-    /* Ensure it has room to scroll */
-    min-height: auto;
-}
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            border: 3px double #e91e63;
+            padding: 20px;
+            background: rgba(10, 10, 10, 0.95);
+            position: relative;
+            box-shadow: 0 0 30px rgba(233, 30, 99, 0.3);
+        }
         
         .container::before {
             content: "";
@@ -44,28 +43,85 @@
         }
         
         h1 {
-            font-family: 'UnifrakturMaguntia', cursive;
+            font-family: 'MedievalSharp', cursive;
             text-align: center;
             color: #00ff88;
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 2em;
+            margin: 0 0 10px 0;
             text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
         }
         
         .subtitle {
             text-align: center;
             color: #e91e63;
-            font-size: 0.9em;
-            letter-spacing: 3px;
-            margin-bottom: 30px;
+            font-size: 0.8em;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
             text-transform: uppercase;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            gap: 5px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 10px 5px;
+            background: transparent;
+            border: none;
+            color: #666;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            color: #00ff88;
+            border-bottom-color: #00ff88;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .operative-info {
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid #333;
+            border-radius: 5px;
+        }
+        
+        .operative-name {
+            color: #00ff88;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .current-score {
+            color: #00ff88;
+            font-size: 1em;
+            font-weight: bold;
         }
         
         .mission-display {
             background: rgba(20, 20, 20, 0.8);
             border: 1px solid #333;
-            padding: 25px;
-            margin: 25px 0;
+            padding: 15px;
+            margin: 15px 0;
             min-height: 120px;
             display: flex;
             align-items: center;
@@ -75,18 +131,19 @@
         }
         
         .mission-text {
-            font-size: 1.2em;
-            line-height: 1.5;
+            font-size: 1em;
+            line-height: 1.4;
             color: #fff;
+            margin: 0;
         }
         
         .mission-category {
             position: absolute;
-            top: -10px;
-            left: 15px;
+            top: -8px;
+            left: 10px;
             background: #0a0a0a;
-            padding: 0 10px;
-            font-size: 0.8em;
+            padding: 0 8px;
+            font-size: 0.7em;
             color: #e91e63;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -94,90 +151,114 @@
         
         .controls {
             display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin: 25px 0;
+            gap: 10px;
+            margin: 15px 0;
         }
         
         button {
             background: transparent;
             color: #00ff88;
             border: 1px solid #00ff88;
-            padding: 12px 25px;
+            padding: 10px 15px;
             font-family: 'Courier New', monospace;
+            font-size: 0.9em;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 2px;
             cursor: pointer;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            flex: 1;
         }
         
         button:hover {
             background: rgba(0, 255, 136, 0.1);
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
         }
         
         button:disabled {
             color: #666;
             border-color: #666;
             cursor: not-allowed;
-            box-shadow: none;
+        }
+
+                .skip-controls button {
+            background: transparent;
+            color: #ff4444;
+            border: 1px solid #ff4444;
+            padding: 8px 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
         
-        button:disabled:hover {
-            background: transparent;
-            box-shadow: none;
+        .skip-controls button:hover {
+            background: rgba(255, 68, 68, 0.1);
         }
         
         .status {
             text-align: center;
-            margin: 15px 0;
+            margin: 10px 0;
             min-height: 20px;
             font-size: 0.9em;
+            padding: 5px;
         }
         
-        .completed {
-            color: #00ff88;
-        }
+        .completed { color: #00ff88; }
+        .error { color: #ff4444; }
         
-        .error {
-            color: #ff4444;
-        }
-        
-        .instructions {
-            text-align: center;
-            color: #888;
-            font-size: 0.9em;
-            margin-top: 30px;
-            line-height: 1.4;
-            border-top: 1px solid #333;
-            padding-top: 20px;
-        }
-        
-        .leaderboard {
+        .top-leaderboard {
             background: rgba(20, 20, 20, 0.8);
             border: 1px solid #333;
-            padding: 20px;
-            margin: 20px 0;
-            max-height: 200px;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        .top-leaderboard h3 {
+            color: #00ff88;
+            margin: 0 0 10px 0;
+            font-size: 1em;
+        }
+        
+        .top-ranking {
+            display: flex;
+            justify-content: space-around;
+            margin: 5px 0;
+        }
+        
+        .rank-item {
+            text-align: center;
+            padding: 5px;
+            font-size: 0.9em;
+        }
+        
+        .rank-1 { color: gold; font-weight: bold; }
+        .rank-2 { color: silver; }
+        .rank-3 { color: #cd7f32; }
+        
+        .full-leaderboard {
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid #333;
+            padding: 15px;
+            margin: 10px 0;
+            max-height: 300px;
             overflow-y: auto;
         }
         
-        .leaderboard h3 {
+        .full-leaderboard h3 {
             color: #00ff88;
             text-align: center;
-            margin-bottom: 15px;
+            margin: 0 0 15px 0;
+            font-size: 1em;
             border-bottom: 1px solid #333;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
         }
         
         .leaderboard-item {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
+            padding: 6px 0;
             border-bottom: 1px solid #222;
+            font-size: 0.9em;
         }
         
         .leaderboard-item:last-child {
@@ -187,7 +268,7 @@
         .leaderboard-rank {
             color: #e91e63;
             font-weight: bold;
-            width: 30px;
+            width: 25px;
         }
         
         .leaderboard-name {
@@ -198,28 +279,21 @@
         .leaderboard-score {
             color: #00ff88;
             font-weight: bold;
+            width: 50px;
+            text-align: right;
         }
         
-        .current-score {
+        .instructions {
             text-align: center;
-            color: #00ff88;
-            font-size: 1.1em;
-            margin: 15px 0;
-            font-weight: bold;
+            color: #888;
+            font-size: 0.8em;
+            margin-top: 15px;
+            line-height: 1.3;
         }
         
         @keyframes scan {
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
-        }
-        
-        .pulse {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
         }
     </style>
 </head>
@@ -228,64 +302,68 @@
         <h1>Arcane Operations</h1>
         <div class="subtitle">Department of Esoteric Affairs</div>
         
-        <div style="text-align: center; margin: 15px 0;">
-            <div style="color: #00ff88; font-size: 1.1em; margin-bottom: 10px;">
-                Operative: <span id="currentCodename" style="font-weight: bold;">Loading...</span>
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('missions')">Missions</button>
+            <button class="tab" onclick="showTab('leaderboard')">Leaderboard</button>
+        </div>
+        
+        <!-- Missions Tab -->
+        <div id="missions-tab" class="tab-content active">
+            <div class="operative-info">
+                <div class="operative-name" id="currentCodename">Loading...</div>
+                <div class="current-score">Rituals: <span id="scoreValue">0</span></div>
             </div>
-            <button onclick="showCodenameEditor()" style="background: #9c27b0; padding: 8px 16px; font-size: 0.9em;">
-                ✏️ Edit Codename
-            </button>
-        </div>
-        
-        <div class="current-score" id="currentScore">
-            Rituals Completed: <span id="scoreValue">0</span>
-        </div>
-        
-        <div class="mission-display">
-            <div class="mission-category">Awaiting Directive</div>
-            <div id="missionText" class="mission-text">
-                Your arcane assignment awaits...<br>
-                <span style="color: #e91e63; font-size: 0.9em;">(Should you choose to accept it)</span>
+            
+            <div class="top-leaderboard">
+                <h3>🏆 Top Operatives</h3>
+                <div class="top-ranking" id="topRanking">
+                    <div class="rank-item rank-1">1. ---</div>
+                    <div class="rank-item rank-2">2. ---</div>
+                    <div class="rank-item rank-3">3. ---</div>
+                </div>
             </div>
+            
+            <div class="mission-display">
+                <div class="mission-category">Awaiting Directive</div>
+                <div id="missionText" class="mission-text">
+                    Your arcane assignment awaits...<br>
+                    <span style="color: #e91e63; font-size: 0.9em;">(Should you choose to accept it)</span>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="getMissionBtn" onclick="getRandomMission()">Summon Ritual</button>
+                <button id="completeBtn" onclick="completeMission()" disabled>Ritual Complete</button>
+            </div>
+
+            <div class="skip-controls" style="text-align: center; margin: 10px 0;">
+                <button id="skipBtn" onclick="attemptSkipMission()" style="background: transparent; color: #ff4444; border: 1px solid #ff4444; padding: 8px 16px; font-size: 0.8em; display: none;">
+                    I cannot complete this mission
+                </button>
+            </div>
+            
+            <div id="statusMessage" class="status"></div>
         </div>
         
-        <div class="controls">
-            <button id="getMissionBtn" onclick="getRandomMission()">Summon Ritual</button>
-            <button id="completeBtn" onclick="completeMission()" disabled>Ritual Complete</button>
-        </div>
-        
-        <div id="statusMessage" class="status"></div>
-        
-        <div class="leaderboard">
-            <h3>🏆 Summoner's Leaderboard 🏆</h3>
-            <div id="leaderboardList">
-                <div style="text-align: center; color: #666; padding: 20px;">
-                    Awakening the scrying orb...
+        <!-- Leaderboard Tab -->
+        <div id="leaderboard-tab" class="tab-content">
+            <div class="full-leaderboard">
+                <h3>🏆 Full Leaderboard 🏆</h3>
+                <div id="leaderboardList">
+                    <div style="text-align: center; color: #666; padding: 20px;">
+                        Awakening the scrying orb...
+                    </div>
                 </div>
             </div>
         </div>
         
         <div class="instructions">
-            <strong>Operative Protocol:</strong><br>
-            One ritual at a time. Complete your current summoning before attempting another.<br>
-            All directives are binding until completed. The class 12 entity demands sincerity.<br>
-            Some missions might not make sense with the logic of the game, just mark as complete in good faith. I coded this in a day.
-        </div>
-    </div>
-
-    <div id="codenameEditor" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: flex; align-items: center; justify-content: center;">
-        <div style="background: #1a1a1a; border: 2px solid #00ff88; padding: 30px; border-radius: 12px; max-width: 400px; width: 90%;">
-            <h3 style="color: #00ff88; text-align: center; margin-bottom: 20px;">Edit Operative Codename</h3>
-            <input type="text" id="newCodename" placeholder="Enter new codename..." maxlength="20" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid #333; border-radius: 6px; color: white; text-align: center; font-size: 16px;">
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button onclick="updateCodename()" style="background: #00ff88; color: #000; flex: 1;">Save Codename</button>
-                <button onclick="hideCodenameEditor()" style="background: #666; flex: 1;">Cancel</button>
-            </div>
+            Complete rituals to climb the ranks. One mission at a time.
         </div>
     </div>
 
     <script>
-        // Complete mission database - ALL 78 MISSIONS
+        // Mission database - ALL 78 MISSIONS
         const missions = [
             {id: 1, text: "The Recruiter (Red): Secretly recruit people to the RED team. Teams go public at 10:30 PM.", category: "Social Alchemy"},
             {id: 2, text: "The Recruiter (Blue): Secretly recruit people to the BLUE team.", category: "Social Alchemy"},
@@ -364,185 +442,107 @@
             {id: 75, text: "The Cartographer: Draw a simple 'treasure map' of the house on a napkin, hide a small object, and give the map to a stranger to find it.", category: "Cartographic Deception"},
             {id: 76, text: "The Translator: You can only speak in a fictional language of gibberish. Use gestures and expressive sounds to communicate until you successfully get someone to bring you a drink.", category: "Linguistic Barrier"},
             {id: 77, text: "The Fact Checker: Listen to someone make any statement, then immediately pull out your phone and say 'Let me fact-check that.' After a dramatic pause, declare 'The experts confirm it' regardless of what you find.", category: "Information Verification"},
-            {id: 78, text: "The Interpreter: Find two people having a conversation and stand near them, providing 'translations' of what they're saying to anyone who will listen.", category: "Conversational Mediation"}
+            {id: 78, text: "The Interpreter: Find two people having a conversation and stand near them, providing 'translations' of what they're saying to anyone who will listen.", category: "Conversational Mediation"},
+            {id: 79, text: "Yell hella loud right now", category: "Auditory Expression"},
+            {id: 80, text: "Allow somebody the opportunity to give you a nickname. It's mandatory tonight but if it sticks, it sticks", category: "Social Transformation"},
+            {id: 81, text: "Find two other people to make a human bridge for you to pass through, this will leave you in another very similar dimension", category: "Interdimensional Travel"},
+            {id: 82, text: "Smile as big as you can for 5 minutes straight", category: "Facial Endurance"}, 
+            {id: 83, text: "Pick an accent and roll with it for half an hour (pirate, cowboy, etc.)", category: "Linguistic Shapeshifting"}
         ];
 
-        // Device tracking and mission logic
-        // Codename management functions
-        function showCodenameEditor() {
-            const currentName = getOperativeName();
-            document.getElementById('newCodename').value = currentName;
-            document.getElementById('codenameEditor').style.display = 'flex';
+        let currentMission = null;
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'leaderboard') {
+                updateLeaderboard();
+            }
         }
 
-        function hideCodenameEditor() {
-            document.getElementById('codenameEditor').style.display = 'none';
-        }
-
-        async function updateCodename() {
-            const newCodename = document.getElementById('newCodename').value.trim();
-            
-            if (!newCodename) {
-                alert('Please enter a codename!');
-                return;
-            }
-            
-            if (newCodename.length < 2) {
-                alert('Codename must be at least 2 characters!');
-                return;
-            }
-
-            // Update locally
-            localStorage.setItem('arcaneOperativeName', newCodename);
-            document.getElementById('currentCodename').textContent = newCodename;
-            
-            // Update on server if available
-            const operativeId = getOperativeId();
-            try {
-                await fetch('/api/missions/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        operativeId: operativeId, 
-                        name: newCodename 
-                    })
-                });
-            } catch (error) {
-                console.log('Server update failed, using local name only');
-            }
-            
-            hideCodenameEditor();
-            showStatus('Codename updated!', 'completed');
-        }
-
-        // Device tracking and mission logic
         function getOperativeId() {
             return localStorage.getItem('arcaneOperativeId') || 'op_unknown';
         }
 
         function getOperativeName() {
-            let name = localStorage.getItem('arcaneOperativeName');
-            if (!name) {
-                // Generate a fallback name if none exists
-                const fallbackNames = ['Ghost', 'Shadow', 'Phantom', 'Raven', 'Vortex'];
-                name = fallbackNames[Math.floor(Math.random() * fallbackNames.length)] + ' ' + Math.floor(Math.random() * 1000);
-                localStorage.setItem('arcaneOperativeName', name);
+            return localStorage.getItem('arcaneOperativeName') || 'Unknown Operative';
+        }
+
+        function getRandomMission() {
+            const operativeId = getOperativeId();
+            const activeMission = localStorage.getItem(`activeMission_${operativeId}`);
+            
+            if (activeMission) {
+                currentMission = JSON.parse(activeMission);
+                displayMission(currentMission);
+                showStatus("Complete your current ritual first.", "error");
+                return;
             }
-            return name;
-        }
 
-        let currentMission = null;
-
-       async function getRandomMission() {
-    const operativeId = getOperativeId();
-    const activeMission = localStorage.getItem(`activeMission_${operativeId}`);
-    
-    if (activeMission) {
-        currentMission = JSON.parse(activeMission);
-        displayMission(currentMission);
-        showStatus("You already have an active ritual. Complete it before summoning another.", "error");
-        return;
-    }
-
-    const completedMissions = JSON.parse(localStorage.getItem(`completedMissions_${operativeId}`) || '[]');
-    
-    // NEW: Track which mission TEXTS have been completed (not just IDs)
-    const completedMissionTexts = JSON.parse(localStorage.getItem(`completedMissionTexts_${operativeId}`) || '[]');
-    
-    // Filter out completed missions by both ID AND text content
-    const availableMissions = missions.filter(mission => {
-        const notCompletedById = !completedMissions.includes(mission.id);
-        const notCompletedByText = !completedMissionTexts.includes(mission.text);
-        return notCompletedById && notCompletedByText;
-    });
-    
-    if (availableMissions.length === 0) {
-        showStatus("The veil is thin. You've completed all available arcane operations.", "completed");
-        return;
-    }
-
-    // Try server first, fall back to client
-    try {
-        const response = await fetch(`/api/missions/get-mission?operativeId=${operativeId}&completed=${JSON.stringify(completedMissions)}&completedTexts=${JSON.stringify(completedMissionTexts)}`);
-        if (response.ok) {
-            const data = await response.json();
-            if (data.mission) {
-                currentMission = data.mission;
-            } else {
-                throw new Error('No mission from server');
+            const completedMissions = JSON.parse(localStorage.getItem(`completedMissions_${operativeId}`) || '[]');
+            const completedMissionTexts = JSON.parse(localStorage.getItem(`completedMissionTexts_${operativeId}`) || '[]');
+            
+            const availableMissions = missions.filter(mission => {
+                return !completedMissions.includes(mission.id) && !completedMissionTexts.includes(mission.text);
+            });
+            
+            if (availableMissions.length === 0) {
+                showStatus("All rituals completed!", "completed");
+                return;
             }
-        } else {
-            throw new Error('Server unavailable');
+
+            const randomIndex = Math.floor(Math.random() * availableMissions.length);
+            currentMission = availableMissions[randomIndex];
+            
+            localStorage.setItem(`activeMission_${operativeId}`, JSON.stringify(currentMission));
+            displayMission(currentMission);
+            updateButtonStates();
+            showStatus("Ritual received. Begin your work.", "completed");
         }
-    } catch (error) {
-        // Fallback to client-side selection
-        const randomIndex = Math.floor(Math.random() * availableMissions.length);
-        currentMission = availableMissions[randomIndex];
-    }
-    
-    localStorage.setItem(`activeMission_${operativeId}`, JSON.stringify(currentMission));
-    displayMission(currentMission);
-    updateButtonStates();
-    showStatus("Arcane ritual received. The summoning begins...", "completed");
-}
 
-       async function completeMission() {
-    if (!currentMission) return;
+        function completeMission() {
+            if (!currentMission) return;
 
-    const operativeId = getOperativeId();
-    
-    try {
-        const response = await fetch('/api/missions/complete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                operativeId, 
-                missionId: currentMission.id,
-                missionText: currentMission.text  // NEW: Send text to server too
-            })
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            updateScore(data.completed);
+            const operativeId = getOperativeId();
+            
+            const completedMissions = JSON.parse(localStorage.getItem(`completedMissions_${operativeId}`) || '[]');
+            completedMissions.push(currentMission.id);
+            localStorage.setItem(`completedMissions_${operativeId}`, JSON.stringify(completedMissions));
+            
+            const completedMissionTexts = JSON.parse(localStorage.getItem(`completedMissionTexts_${operativeId}`) || '[]');
+            completedMissionTexts.push(currentMission.text);
+            localStorage.setItem(`completedMissionTexts_${operativeId}`, JSON.stringify(completedMissionTexts));
+            
+            localStorage.removeItem(`activeMission_${operativeId}`);
+            
+            updateScore(completedMissions.length);
+            showStatus(`Ritual complete. Total: ${completedMissions.length}`, "completed");
+            
+            document.getElementById('missionText').innerHTML = "Your arcane assignment awaits...<br><span style='color: #e91e63; font-size: 0.9em;'>(Should you choose to accept it)</span>";
+            document.querySelector('.mission-category').textContent = "Awaiting Directive";
+            currentMission = null;
+            updateButtonStates();
         }
-    } catch (error) {
-        // Server failed, use client-side tracking
-        console.log('Server completion failed, using client-side');
-    }
-
-    // Update local storage regardless
-    const completedMissions = JSON.parse(localStorage.getItem(`completedMissions_${operativeId}`) || '[]');
-    completedMissions.push(currentMission.id);
-    localStorage.setItem(`completedMissions_${operativeId}`, JSON.stringify(completedMissions));
-    
-    // NEW: Also track completed mission texts
-    const completedMissionTexts = JSON.parse(localStorage.getItem(`completedMissionTexts_${operativeId}`) || '[]');
-    completedMissionTexts.push(currentMission.text);
-    localStorage.setItem(`completedMissionTexts_${operativeId}`, JSON.stringify(completedMissionTexts));
-    
-    localStorage.removeItem(`activeMission_${operativeId}`);
-    
-    updateScore(completedMissions.length);
-    showStatus(`Ritual complete. The entity grows stronger. Total: ${completedMissions.length}`, "completed");
-    
-    // Reset UI
-    document.getElementById('missionText').innerHTML = "Your arcane assignment awaits...<br><span style='color: #e91e63; font-size: 0.9em;'>(Should you choose to accept it)</span>";
-    document.querySelector('.mission-category').textContent = "Awaiting Directive";
-    currentMission = null;
-    updateButtonStates();
-}
 
         function displayMission(mission) {
             document.getElementById('missionText').textContent = mission.text;
             document.querySelector('.mission-category').textContent = mission.category;
         }
 
-        function updateButtonStates() {
+               function updateButtonStates() {
             const operativeId = getOperativeId();
             const hasActiveMission = !!localStorage.getItem(`activeMission_${operativeId}`);
             document.getElementById('getMissionBtn').disabled = hasActiveMission;
             document.getElementById('completeBtn').disabled = !hasActiveMission;
+            document.getElementById('skipBtn').style.display = hasActiveMission ? 'block' : 'none';
         }
 
         function updateScore(score) {
@@ -556,28 +556,46 @@
             
             setTimeout(() => {
                 statusElement.textContent = '';
-            }, 5000);
+            }, 3000);
         }
 
-        async function updateLeaderboard() {
-            try {
-                const response = await fetch('/api/missions/leaderboard');
-                if (response.ok) {
-                    const leaderboard = await response.json();
-                    displayLeaderboard(leaderboard);
-                }
-            } catch (error) {
-                // Server unavailable, show placeholder
-                document.getElementById('leaderboardList').innerHTML = 
-                    '<div style="text-align: center; color: #666; padding: 20px;">Scrying orb malfunction... try again later</div>';
+        function updateTopRanking(leaderboard) {
+            const topRanking = document.getElementById('topRanking');
+            if (leaderboard.length === 0) {
+                topRanking.innerHTML = `
+                    <div class="rank-item rank-1">1. ---</div>
+                    <div class="rank-item rank-2">2. ---</div>
+                    <div class="rank-item rank-3">3. ---</div>
+                `;
+                return;
             }
+
+            topRanking.innerHTML = leaderboard.slice(0, 3).map((operative, index) => `
+                <div class="rank-item rank-${index + 1}">
+                    ${index + 1}. ${operative.name}<br>
+                    <small>${operative.completed}</small>
+                </div>
+            `).join('');
+        }
+
+        function updateLeaderboard() {
+            fetch('/api/missions/leaderboard')
+                .then(response => response.json())
+                .then(leaderboard => {
+                    displayLeaderboard(leaderboard);
+                    updateTopRanking(leaderboard);
+                })
+                .catch(error => {
+                    document.getElementById('leaderboardList').innerHTML = 
+                        '<div style="text-align: center; color: #666; padding: 20px;">Leaderboard offline</div>';
+                });
         }
 
         function displayLeaderboard(leaderboard) {
             const leaderboardList = document.getElementById('leaderboardList');
             
             if (leaderboard.length === 0) {
-                leaderboardList.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">No summoners yet... be the first!</div>';
+                leaderboardList.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">No operatives yet</div>';
                 return;
             }
             
@@ -585,9 +603,63 @@
                 <div class="leaderboard-item">
                     <div class="leaderboard-rank">${index + 1}.</div>
                     <div class="leaderboard-name">${operative.name}</div>
-                    <div class="leaderboard-score">${operative.completed} rituals</div>
+                    <div class="leaderboard-score">${operative.completed}</div>
                 </div>
             `).join('');
+        }
+
+                // Skip mission functionality
+        let skipAttempts = 0;
+        const skipMessages = [
+            "I cannot complete this mission",
+            "I really can't I'm not being a spoilsport",
+            "skip mission", 
+            "for real",
+            "For real skip the mission right now",
+            "official mission skip button"
+        ];
+
+        function attemptSkipMission() {
+            const skipBtn = document.getElementById('skipBtn');
+            
+            if (skipAttempts < skipMessages.length - 1) {
+                // Show next warning message
+                skipAttempts++;
+                skipBtn.textContent = skipMessages[skipAttempts];
+                
+                // Add some visual feedback
+                skipBtn.style.background = 'rgba(255, 68, 68, 0.1)';
+                setTimeout(() => {
+                    skipBtn.style.background = 'transparent';
+                }, 200);
+                
+            } else {
+                // Final skip - actually skip the mission
+                skipMission();
+            }
+        }
+
+        function skipMission() {
+            if (!currentMission) return;
+
+            const operativeId = getOperativeId();
+            
+            // Just remove the active mission without adding to score
+            localStorage.removeItem(`activeMission_${operativeId}`);
+            
+            // Reset UI
+            document.getElementById('missionText').innerHTML = "Your arcane assignment awaits...<br><span style='color: #e91e63; font-size: 0.9em;'>(Should you choose to accept it)</span>";
+            document.querySelector('.mission-category').textContent = "Awaiting Directive";
+            
+            // Hide skip button and reset attempts
+            document.getElementById('skipBtn').style.display = 'none';
+            skipAttempts = 0;
+            document.getElementById('skipBtn').textContent = skipMessages[0];
+            
+            currentMission = null;
+            updateButtonStates();
+            
+            showStatus("Mission skipped. No points awarded.", "error");
         }
 
         // Initialize
@@ -596,7 +668,6 @@
             const completedMissions = JSON.parse(localStorage.getItem(`completedMissions_${operativeId}`) || '[]');
             updateScore(completedMissions.length);
             
-            // ADD THIS LINE - Set the codename display
             document.getElementById('currentCodename').textContent = getOperativeName();
             
             const activeMission = localStorage.getItem(`activeMission_${operativeId}`);
@@ -606,9 +677,6 @@
             }
             updateButtonStates();
             updateLeaderboard();
-            
-            // Update leaderboard every 30 seconds
-            setInterval(updateLeaderboard, 30000);
         }
     </script>
 </body>

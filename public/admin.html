@@ -675,30 +675,53 @@
         }
 
         async function validateAdminManualVideo() {
-            const youtubeUrl = document.getElementById('adminYoutubeUrl').value.trim();
-            const singer = document.getElementById('manualSingerName').value.trim();
-            const messageElement = document.getElementById('adminManualValidationMessage');
-            
-            if (!youtubeUrl) {
-                showAdminManualMessage('Please enter a YouTube URL', 'error');
-                return;
+    const youtubeUrl = document.getElementById('adminYoutubeUrl').value.trim();
+    const singer = document.getElementById('manualSingerName').value.trim();
+    const messageElement = document.getElementById('adminManualValidationMessage');
+    
+    if (!youtubeUrl) {
+        showAdminManualMessage('Please enter a YouTube URL', 'error');
+        return;
+    }
+
+    if (!singer) {
+        showAdminManualMessage('Please enter singer name first', 'error');
+        return;
+    }
+
+    showAdminManualMessage('Adding to queue...', 'loading');
+
+    try {
+        const response = await fetch('/api/admin-add-to-top', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                singer: singer,
+                youtubeUrl: youtubeUrl
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            let message = `✅ Added ${singer} to top of queue!`;
+            if (data.playbackMethod === 'browser') {
+                message += ' (Will open in YouTube)';
             }
-
-            if (!singer) {
-                showAdminManualMessage('Please enter singer name first', 'error');
-                return;
-            }
-
-            showAdminManualMessage('Adding to queue...', 'loading');
-
-            const videoId = extractYouTubeId(youtubeUrl);
-            if (!videoId) {
-                showAdminManualMessage('❌ Could not extract video ID from URL', 'error');
-                return;
-            }
-
-            await addAdminManualVideoToQueue(videoId, `Manual Video (${videoId})`, singer);
+            showAdminManualMessage(message, 'success');
+            document.getElementById('adminYoutubeUrl').value = '';
+            document.getElementById('manualSingerName').value = '';
+            setTimeout(() => {
+                hideManualInput();
+            }, 2000);
+        } else {
+            showAdminManualMessage('Error: ' + (data.error || 'Failed to add to queue'), 'error');
         }
+    } catch (error) {
+        console.error('Add to top error:', error);
+        showAdminManualMessage('Error submitting request', 'error');
+    }
+}
 
         function showAdminManualMessage(message, type) {
             const messageElement = document.getElementById('adminManualValidationMessage');
@@ -715,36 +738,7 @@
                                         type === 'warning' ? '1px solid #ff9800' : '1px solid #ddd';
         }
 
-        async function addAdminManualVideoToQueue(videoId, title, singer) {
-            try {
-                const response = await fetch('/api/add-to-top', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        singer: singer,
-                        youtubeUrl: `https://www.youtube.com/watch?v=${videoId}`,
-                        songTitle: title
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (data.success) {
-                    showAdminManualMessage(`✅ Added ${singer} to top of queue!`, 'success');
-                    document.getElementById('adminYoutubeUrl').value = '';
-                    document.getElementById('manualSingerName').value = '';
-                    setTimeout(() => {
-                        hideManualInput();
-                    }, 2000);
-                } else {
-                    showAdminManualMessage('Error: ' + (data.error || 'Failed to add to queue'), 'error');
-                }
-            } catch (error) {
-                console.error('Add to top error:', error);
-                showAdminManualMessage('Error submitting request', 'error');
-            }
-        }
-
+    
         // Tab management
         function showTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => {
@@ -931,38 +925,41 @@
         });
 
         async function addToTop() {
-            const singer = document.getElementById('adminSingerName').value.trim();
-            
-            if (!singer || !selectedVideo) {
-                showAdminError('Please enter singer name and select a song');
-                return;
-            }
+    const singer = document.getElementById('adminSingerName').value.trim();
+    
+    if (!singer || !selectedVideo) {
+        showAdminError('Please enter singer name and select a song');
+        return;
+    }
 
-            try {
-                const response = await fetch('/api/add-to-top', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        singer: singer,
-                        youtubeUrl: `https://www.youtube.com/watch?v=${selectedVideo.id}`,
-                        songTitle: selectedVideo.title
-                    })
-                });
+    try {
+        const response = await fetch('/api/admin-add-to-top', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                singer: singer,
+                youtubeUrl: `https://www.youtube.com/watch?v=${selectedVideo.id}`
+            })
+        });
 
-                const data = await response.json();
-                
-                if (data.success) {
-                    showAdminSuccess(`✅ Added ${singer} to top of queue!`);
-                    clearAdminSelection();
-                    hideAddToTop();
-                } else {
-                    showAdminError('Error: ' + (data.error || 'Failed to add to queue'));
-                }
-            } catch (error) {
-                console.error('Add to top error:', error);
-                showAdminError('Error submitting request');
+        const data = await response.json();
+        
+        if (data.success) {
+            let message = `✅ Added ${singer} to top of queue!`;
+            if (data.playbackMethod === 'browser') {
+                message += ' (Will open in YouTube)';
             }
+            showAdminSuccess(message);
+            clearAdminSelection();
+            hideAddToTop();
+        } else {
+            showAdminError('Error: ' + (data.error || 'Failed to add to queue'));
         }
+    } catch (error) {
+        console.error('Add to top error:', error);
+        showAdminError('Error submitting request');
+    }
+}
 
         function showAdminSuccess(message) {
             const successMsg = document.getElementById('adminSuccessMessage');

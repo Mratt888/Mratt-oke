@@ -3,34 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bureau of Arcane Operations - Briefing</title>
+    <title>Arcane Operations - Induction</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&family=UnifrakturMaguntia&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Courier+New:wght@400;700&family=MedievalSharp&display=swap');
         
-     html {
-    scroll-behavior: auto !important;
-}
         body {
-    margin: 0;
-    padding: 20px;
-    background: #0a0a0a;
-    color: #e91e63;
-    font-family: 'Courier New', monospace;
-    min-height: 100vh;
-    /* Remove any position: fixed */
-}
+            margin: 0;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #e91e63;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-.container {
-    max-width: 600px;
-    margin: 0 auto;
-    border: 3px double #e91e63;
-    padding: 30px;
-    background: rgba(10, 10, 10, 0.95);
-    position: relative;
-    box-shadow: 0 0 30px rgba(233, 30, 99, 0.3);
-    /* Ensure it has room to scroll */
-    min-height: auto;
-}
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            border: 3px double #e91e63;
+            padding: 30px;
+            background: rgba(10, 10, 10, 0.95);
+            position: relative;
+            box-shadow: 0 0 30px rgba(233, 30, 99, 0.3);
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
         
         .container::before {
             content: "";
@@ -44,106 +42,41 @@
         }
         
         h1 {
-            font-family: 'UnifrakturMaguntia', cursive;
+            font-family: 'MedievalSharp', cursive;
             text-align: center;
             color: #00ff88;
-            font-size: 2.5em;
+            font-size: 2.2em;
             margin-bottom: 10px;
             text-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+            font-weight: 700;
+            letter-spacing: 1px;
         }
         
-        .subtitle {
-            text-align: center;
-            color: #e91e63;
-            font-size: 0.9em;
-            letter-spacing: 3px;
-            margin-bottom: 30px;
-            text-transform: uppercase;
+        .induction-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
         
-        .briefing-content {
+        .briefing-text {
             background: rgba(20, 20, 20, 0.8);
             border: 1px solid #333;
             padding: 25px;
-            margin: 20px 0;
+            margin: 15px 0;
             line-height: 1.6;
+            flex: 1;
+            overflow-y: auto;
+            max-height: 300px;
         }
         
-        .briefing-section {
-            margin-bottom: 25px;
-        }
-        
-        .briefing-section h3 {
-            color: #00ff88;
-            border-bottom: 1px solid #333;
-            padding-bottom: 8px;
-            margin-bottom: 15px;
-        }
-        
-        .rules-list {
-            list-style: none;
-            padding: 0;
-        }
-        
-        .rules-list li {
-            margin-bottom: 12px;
-            padding-left: 20px;
-            position: relative;
-        }
-        
-        .rules-list li::before {
-            content: "⟡";
-            color: #e91e63;
-            position: absolute;
-            left: 0;
-        }
-        
-        .honor-system {
-            background: rgba(233, 30, 99, 0.1);
-            border-left: 3px solid #e91e63;
-            padding: 15px;
-            margin: 20px 0;
-            font-style: italic;
-        }
-        
-        .prize-section {
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid #00ff88;
-            padding: 20px;
-            margin: 20px 0;
+        .step-indicator {
             text-align: center;
-        }
-        
-        .prize-section h3 {
-            color: #00ff88;
-            margin-top: 0;
-        }
-        
-        button {
-            background: transparent;
-            color: #00ff88;
-            border: 1px solid #00ff88;
-            padding: 15px 30px;
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
+            color: #e91e63;
+            font-size: 0.9em;
+            margin-bottom: 15px;
             text-transform: uppercase;
             letter-spacing: 2px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: block;
-            margin: 30px auto 0;
-            font-size: 1.1em;
-        }
-        
-        button:hover {
-            background: rgba(0, 255, 136, 0.1);
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
-        }
-        
-        .loading {
-            text-align: center;
-            color: #00ff88;
-            margin: 10px 0;
         }
         
         .form-group {
@@ -174,189 +107,253 @@
             background: rgba(255,255,255,0.15);
         }
         
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: transparent;
+            color: #00ff88;
+            border: 1px solid #00ff88;
+            padding: 12px 25px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+        }
+        
+        button:hover {
+            background: rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+        
+        button:disabled {
+            color: #666;
+            border-color: #666;
+            cursor: not-allowed;
+        }
+        
+        .begin-button {
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            color: #000;
+            font-weight: bold;
+            border: none;
+            animation: pulse 2s infinite;
+        }
+        
+        .begin-button:hover {
+            background: linear-gradient(135deg, #00cc6a, #00aa55);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+        }
+        
+        .rules-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .rules-list li {
+            margin-bottom: 12px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .rules-list li::before {
+            content: "⟡";
+            color: #e91e63;
+            position: absolute;
+            left: 0;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #00ff88;
+            margin: 10px 0;
+        }
+        
         @keyframes scan {
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Bureau of Arcane Operations</h1>
-        <div class="subtitle">Top Secret Induction Briefing</div>
+        <h1>Arcane Operations</h1>
+        <div class="step-indicator" id="stepIndicator">Step 1 of 5</div>
         
-        <div class="briefing-content">
-            <div class="briefing-section">
-                <h3>Welcome, Operative</h3>
-                <p>You are about to be inducted into a covert network of arcane operatives. Your mission: complete esoteric rituals that summon a class 12 entity to this plane.</p>
+        <div class="induction-content">
+            <div class="briefing-text" id="briefingText">
+                <!-- Content will be populated by JavaScript -->
             </div>
             
-            <div class="briefing-section">
-                <h3>Operative Identification</h3>
-                <div class="form-group">
+            <div class="controls">
+                <button onclick="previousStep()" id="prevBtn" style="display: none;">← Previous</button>
+                <button onclick="nextStep()" id="nextBtn">Continue Induction →</button>
+                <button onclick="beginOperations()" id="beginBtn" class="begin-button" style="display: none;">🎭 BEGIN OPERATIONS 🎭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const inductionSteps = [
+            {
+                title: "Welcome, Operative",
+                content: `You are about to be inducted into a covert network of arcane operatives. Your mission: complete esoteric rituals that summon a class 12 entity to this plane.<br><br>
+                <strong>Honor System Protocol:</strong><br>
+                We operate on mutual trust. Report missions as completed only when you've genuinely fulfilled the assignment. The class 12 entity will not suffer summoning by cheats.`
+            },
+            {
+                title: "Operative Identification",
+                content: `<div class="form-group">
                     <label for="operativeCodename">Choose Your Codename</label>
-                    <input type="text" id="operativeCodename" placeholder="Enter your secret codename..." maxlength="20" style="font-family: 'Courier New', monospace; text-align: center;">
+                    <input type="text" id="operativeCodename" placeholder="Enter your secret codename..." maxlength="20">
                     <div style="font-size: 0.8em; color: #888; margin-top: 5px;">
                         This will appear on the leaderboard. Choose wisely.
                     </div>
-                </div>
-            </div>
-            
-            <div class="briefing-section">
-                <h3>Scoring System</h3>
+                </div>`
+            },
+            {
+                title: "Mission Protocol",
+                content: `<strong>Scoring System:</strong>
                 <ul class="rules-list">
-                    <li><strong>1 point per completed mission</strong> - Simple and effective</li>
+                    <li><strong>1 point per completed mission</strong></li>
                     <li><strong>Unlimited attempts</strong> - Complete as many as you can</li>
-                    <li><strong>One mission at a time</strong> - Finish your current assignment before receiving another</li>
-                    <li><strong>Real-time leaderboard</strong> - Watch your rank climb</li>
-                    <li><strong>Server-tracked progress</strong> - Your score is saved across devices - save the upcoming missions page for easy access</li>
-                </ul>
-            </div>
-            
-            <div class="prize-section">
-                <h3>🏆 The Grand Prize 🏆</h3>
-                <p>The operative with the <strong>most completed rituals</strong> by the end of the night will receive an hefty prize</p>
-                <p><em>Current leaderboard updates in real-time on the mission screen!</em></p>
-            </div>
-            
-            <div class="honor-system">
-                <strong>Honor System Protocol:</strong><br>
-                We operate on mutual trust. Report missions as completed only when you've genuinely fulfilled the assignment to the best of your ability. The 12 class entity will not suffer summoning by cheats and ne'erdowells.
-            </div>
-            
-            <div class="briefing-section">
-                <h3>Operative Conduct</h3>
-                <ul class="rules-list">
+                    <li><strong>One mission at a time</strong></li>
+                    <li><strong>Real-time leaderboard</strong></li>
+                    <li><strong>Server-tracked progress</strong> - Save the missions page for easy access</li>
+                </ul>`
+            },
+            {
+                title: "Operative Conduct",
+                content: `<ul class="rules-list">
                     <li>Be subtle but effective</li>
                     <li>Embrace the strange and unusual</li>
                     <li>Respect other operatives' missions</li>
                     <li>Remember: this is supposed to be fun</li>
-                    <li>If a mission feels unsafe or uncomfortable, skip it and get a new one. But, like, don't be a weenie either.</li>
-                </ul>
-            </div>
+                    <li>If a mission feels unsafe, skip it and get a new one</li>
+                </ul>`
+            },
+            {
+                title: "The Grand Prize",
+                content: `<div style="text-align: center; padding: 20px; background: rgba(0, 255, 136, 0.1); border: 1px solid #00ff88; border-radius: 8px;">
+                    <h3 style="color: #00ff88; margin-top: 0;">🏆 THE GRAND PRIZE 🏆</h3>
+                    <p>The operative with the <strong>most completed rituals</strong> by the end of the night will receive a hefty prize.</p>
+                    <p><em>Current leaderboard updates in real-time!</em></p>
+                </div>
+                <div style="text-align: center; margin-top: 20px; color: #00ff88; font-weight: bold;">
+                    Induction Complete. You are ready to begin.
+                </div>`
+            }
+        ];
 
-            <div class="briefing-section">
-                <h3>Technical Briefing</h3>
-                <ul class="rules-list">
-                    <li>Your progress is tied to this device - don't clear your browser data!</li>
-                    <li>If you switch devices, you'll start a new operative profile</li>
-                    <li>Mission completion is verified by the arcane server network</li>
-                    <li>Leaderboard updates automatically every 30 seconds</li>
-                </ul>
-            </div>
-        </div>
+        let currentStep = 0;
 
-        <div id="loadingMessage" class="loading" style="display: none;">
-            Initializing arcane connection...
-        </div>
-        
-        <button onclick="beginOperations()" id="beginButton">Accept Induction & Begin Operations</button>
-    </div>
-
-    <script>
-        async function beginOperations() {
-            const button = document.getElementById('beginButton');
-            const loading = document.getElementById('loadingMessage');
-            const codenameInput = document.getElementById('operativeCodename');
+        function updateStep() {
+            const step = inductionSteps[currentStep];
+            document.getElementById('stepIndicator').textContent = `Step ${currentStep + 1} of ${inductionSteps.length}`;
+            document.getElementById('briefingText').innerHTML = `<h3>${step.title}</h3>${step.content}`;
             
-            // Validate codename
-            const codename = codenameInput.value.trim();
+            // Show/hide navigation buttons
+            const isFinalStep = currentStep === inductionSteps.length - 1;
+            document.getElementById('prevBtn').style.display = currentStep > 0 ? 'block' : 'none';
+            document.getElementById('nextBtn').style.display = isFinalStep ? 'none' : 'block';
+            document.getElementById('beginBtn').style.display = isFinalStep ? 'block' : 'none';
+        }
+
+        function nextStep() {
+            // Validate codename step
+            if (currentStep === 1) {
+                const codename = document.getElementById('operativeCodename').value.trim();
+                if (!codename) {
+                    alert('Please choose an operative codename!');
+                    return;
+                }
+                if (codename.length < 2) {
+                    alert('Codename must be at least 2 characters!');
+                    return;
+                }
+            }
+
+            if (currentStep < inductionSteps.length - 1) {
+                currentStep++;
+                updateStep();
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 0) {
+                currentStep--;
+                updateStep();
+            }
+        }
+
+                function beginOperations() {
+            // Get the codename from localStorage instead of the form
+            const codename = localStorage.getItem('arcaneOperativeName');
+            
+            // If no codename in storage, use a fallback
             if (!codename) {
-                alert('Please choose an operative codename!');
-                codenameInput.focus();
-                return;
+                const fallbackNames = ['Ghost', 'Shadow', 'Phantom', 'Raven', 'Vortex'];
+                const randomName = fallbackNames[Math.floor(Math.random() * fallbackNames.length)] + Math.floor(Math.random() * 1000);
+                localStorage.setItem('arcaneOperativeName', randomName);
+            }
+
+            const beginBtn = document.getElementById('beginBtn');
+            const briefingText = document.getElementById('briefingText');
+            
+            if (beginBtn) {
+                beginBtn.disabled = true;
+                beginBtn.textContent = 'ACTIVATING...';
             }
             
-            if (codename.length < 2) {
-                alert('Codename must be at least 2 characters!');
-                codenameInput.focus();
-                return;
+            if (briefingText) {
+                briefingText.innerHTML = '<div class="loading">Initializing arcane connection...</div>';
             }
 
-            button.disabled = true;
-            button.textContent = 'Initializing...';
-            loading.style.display = 'block';
+            // Save/ensure operative ID
+            let operativeId = localStorage.getItem('arcaneOperativeId');
+            if (!operativeId) {
+                operativeId = 'op_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('arcaneOperativeId', operativeId);
+            }
 
-            try {
-                // REUSE EXISTING OPERATIVE OR CREATE NEW
-                let operativeId = localStorage.getItem('arcaneOperativeId');
-                const isNewOperative = !operativeId;
-                
-                if (!operativeId) {
-                    operativeId = 'op_' + Math.random().toString(36).substr(2, 9);
-                    localStorage.setItem('arcaneOperativeId', operativeId);
-                    console.log('🆕 New operative created:', operativeId);
-                } else {
-                    console.log('♻️ Existing operative resumed:', operativeId);
-                }
+            localStorage.setItem('arcaneBriefingCompleted', 'true');
 
-                // Save/update the chosen codename
-                localStorage.setItem('arcaneOperativeName', codename);
+            console.log('Activating operative:', operativeId, codename);
 
-                // Register/update with server
-                await registerOperative(operativeId, codename);
-                
-                // Set briefing as completed
-                localStorage.setItem('arcaneBriefingCompleted', 'true');
-                
-                // Brief delay for dramatic effect
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Show appropriate message
-                if (isNewOperative) {
-                    loading.textContent = 'Operative activated! Redirecting...';
-                } else {
-                    loading.textContent = 'Operative updated! Redirecting...';
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Redirect to missions page
+            // Try to register with server (non-blocking)
+            fetch('/api/missions/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    operativeId: operativeId, 
+                    name: codename || 'Unknown Operative'
+                })
+            })
+            .catch(error => {
+                console.log('Server registration failed, using local mode');
+            })
+            .finally(() => {
+                // ALWAYS redirect
+                console.log('Redirecting to missions...');
                 window.location.href = 'missions.html';
-                
-            } catch (error) {
-                console.error('Initialization failed:', error);
-                loading.textContent = 'Server connection failed. Using offline mode...';
-                
-                // Fallback to client-side only
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                // REUSE EXISTING OPERATIVE OR CREATE NEW (offline version)
-                let operativeId = localStorage.getItem('arcaneOperativeId');
-                if (!operativeId) {
-                    operativeId = 'op_offline_' + Math.random().toString(36).substr(2, 9);
-                    localStorage.setItem('arcaneOperativeId', operativeId);
-                }
-                
-                // Save codename for offline use
-                localStorage.setItem('arcaneOperativeName', codename);
-                localStorage.setItem('arcaneBriefingCompleted', 'true');
-                window.location.href = 'missions.html';
-            }
+            });
         }
-        
-        async function registerOperative(operativeId, operativeName) {
-            try {
-                const response = await fetch('/api/missions/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        operativeId: operativeId, 
-                        name: operativeName 
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Server registration failed');
-                }
-                
-                console.log('Operative registered:', operativeId, operativeName);
-                return await response.json();
-            } catch (error) {
-                console.log('Server registration failed, using offline mode');
-                // We'll continue with client-side storage
-            }
-        }
+
+        // Initialize first step
+        updateStep();
     </script>
 </body>
 </html>

@@ -168,7 +168,7 @@ app.get('/api/quota-status', (req, res) => {
 });
 
 ;
-// Proper YouTube API validation endpoint
+// Enhanced YouTube validation with embeddability check
 app.post('/api/validate-video', async (req, res) => {
   const { youtubeUrl } = req.body;
   
@@ -210,8 +210,12 @@ app.post('/api/validate-video', async (req, res) => {
     
     // Check if video is embeddable
     if (!video.status.embeddable) {
-      return res.status(400).json({
-        error: 'Video cannot be embedded on external websites',
+      return res.json({
+        success: true,
+        videoId: videoId,
+        title: video.snippet.title,
+        channel: video.snippet.channelTitle,
+        thumbnail: video.snippet.thumbnails.default.url,
         embeddable: false,
         details: 'Playback on other websites has been disabled by the video owner'
       });
@@ -219,8 +223,12 @@ app.post('/api/validate-video', async (req, res) => {
 
     // Check if video is available in your region/not blocked
     if (video.status.blockedInSomeCountries) {
-      return res.status(400).json({
-        error: 'Video not available in your region',
+      return res.json({
+        success: true,
+        videoId: videoId,
+        title: video.snippet.title,
+        channel: video.snippet.channelTitle,
+        thumbnail: video.snippet.thumbnails.default.url,
         embeddable: false,
         details: 'This video contains content that may not be available in your country'
       });
@@ -249,10 +257,75 @@ app.post('/api/validate-video', async (req, res) => {
       });
     }
     
-    res.status(500).json({ 
-      error: 'Failed to validate video',
-      details: error.message 
+    // If API fails, assume it's embeddable (fallback)
+    res.json({
+      success: true,
+      videoId: videoId,
+      title: `YouTube Video (${videoId})`,
+      embeddable: true,
+      apiValidation: false
     });
+  }
+});
+
+// Enhanced validation and queue endpoint
+app.post('/api/validate-and-queue', async (req, res) => {
+  const { singer, youtubeUrl, songTitle } = req.body;
+  
+  const videoId = extractYouTubeId(youtubeUrl);
+  if (!videoId) {
+    return res.status(400).json({ error: 'Invalid YouTube URL' });
+  }
+
+  try {
+    let embeddable = true;
+    let finalSongTitle = songTitle || `YouTube Video (${videoId})`;
+
+    // Only check embeddability if we have quota
+    if (searchQuotaUsed < MAX_SEARCH_QUOTA) {
+      try {
+        const response = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
+          params: {
+            part: 'snippet,status',
+            id: videoId,
+            key: YOUTUBE_API_KEY
+          }
+        });
+
+        if (response.data.items.length > 0) {
+          const video = response.data.items[0];
+          embeddable = video.status.embeddable && !video.status.blockedInSomeCountries;
+          finalSongTitle = video.snippet.title;
+          searchQuotaUsed += 1;
+          saveQuota();
+        }
+      } catch (error) {
+        // If API check fails, assume embeddable
+        console.log('API check failed, assuming embeddable');
+      }
+    }
+
+    const queueItem = {
+      id: Date.now(),
+      singer: singer.trim(),
+      songTitle: finalSongTitle,
+      youtubeId: videoId,
+      youtubeUrl: youtubeUrl,
+      timestamp: new Date(),
+      playbackMethod: embeddable ? 'embed' : 'browser'
+    };
+    
+    queue.push(queueItem);
+    io.emit('queueUpdate', { queue, currentSong });
+    res.json({ 
+      success: true, 
+      queuePosition: queue.length,
+      playbackMethod: queueItem.playbackMethod
+    });
+    
+  } catch (error) {
+    console.error('Queue error:', error);
+    res.status(500).json({ error: 'Failed to add to queue' });
   }
 });
 
@@ -275,7 +348,8 @@ app.post('/api/request', async (req, res) => {
     songTitle: songTitle || `YouTube Video (${videoId})`,
     youtubeId: videoId,
     youtubeUrl: `https://www.youtube.com/watch?v=${videoId}`,
-    timestamp: new Date()
+    timestamp: new Date(),
+    playbackMethod: 'embed' // Default to embed
   };
   
   queue.push(queueItem);
@@ -305,12 +379,79 @@ app.post('/api/add-to-top', async (req, res) => {
     youtubeId: videoId,
     youtubeUrl: youtubeUrl,
     timestamp: new Date(),
-    addedByAdmin: true
+    addedByAdmin: true,
+    playbackMethod: 'embed' // Default to embed
   };
   
   queue.unshift(queueItem);
   io.emit('queueUpdate', { queue, currentSong });
   res.json({ success: true, queuePosition: 1, songTitle });
+});
+
+// Enhanced admin add-to-top with embed check
+app.post('/api/admin-add-to-top', async (req, res) => {
+  const { singer, youtubeUrl } = req.body;
+  
+  if (!singer || !youtubeUrl) {
+    return res.status(400).json({ error: 'Please provide both name and YouTube URL' });
+  }
+  
+  const videoId = extractYouTubeId(youtubeUrl);
+  if (!videoId) {
+    return res.status(400).json({ error: 'Invalid YouTube URL' });
+  }
+
+  try {
+    let embeddable = true;
+    let songTitle = await getVideoTitle(videoId);
+
+    // Check embeddability if we have quota
+    if (searchQuotaUsed < MAX_SEARCH_QUOTA) {
+      try {
+        const response = await axios.get('https://www.googleapis.com/youtube/v3/videos', {
+          params: {
+            part: 'status',
+            id: videoId,
+            key: YOUTUBE_API_KEY
+          }
+        });
+
+        if (response.data.items.length > 0) {
+          const video = response.data.items[0];
+          embeddable = video.status.embeddable && !video.status.blockedInSomeCountries;
+          searchQuotaUsed += 1;
+          saveQuota();
+        }
+      } catch (error) {
+        // If API check fails, assume embeddable
+        console.log('API embed check failed, assuming embeddable');
+      }
+    }
+
+    const queueItem = {
+      id: Date.now(),
+      singer: singer.trim(),
+      songTitle: songTitle,
+      youtubeId: videoId,
+      youtubeUrl: youtubeUrl,
+      timestamp: new Date(),
+      addedByAdmin: true,
+      playbackMethod: embeddable ? 'embed' : 'browser'
+    };
+    
+    queue.unshift(queueItem);
+    io.emit('queueUpdate', { queue, currentSong });
+    res.json({ 
+      success: true, 
+      queuePosition: 1, 
+      songTitle,
+      playbackMethod: queueItem.playbackMethod 
+    });
+    
+  } catch (error) {
+    console.error('Admin add error:', error);
+    res.status(500).json({ error: 'Failed to add to queue' });
+  }
 });
 
 // Move song up in queue
@@ -560,7 +701,12 @@ function getAvailableMissions(completedMissions) {
     { id: 75, text: "The Cartographer: Draw a simple 'treasure map' of the house on a napkin, hide a small object, and give the map to a stranger to find it.", category: "Cartographic Deception" },
     { id: 76, text: "The Translator: You can only speak in a fictional language of gibberish. Use gestures and expressive sounds to communicate until you successfully get someone to bring you a drink.", category: "Linguistic Barrier" },
     { id: 77, text: "The Fact Checker: Listen to someone make any statement, then immediately pull out your phone and say 'Let me fact-check that.' After a dramatic pause, declare 'The experts confirm it' regardless of what you find.", category: "Information Verification" },
-    { id: 78, text: "The Interpreter: Find two people having a conversation and stand near them, providing 'translations' of what they're saying to anyone who will listen.", category: "Conversational Mediation" }
+    { id: 78, text: "The Interpreter: Find two people having a conversation and stand near them, providing 'translations' of what they're saying to anyone who will listen.", category: "Conversational Mediation" },
+    { id: 79, text: "Yell hella loud right now", category: "Auditory Expression"},
+    { id: 80, text: "Allow somebody the opportunity to give you a nickname. It's mandatory tonight but if it sticks, it sticks", category: "Social Transformation"},
+    { id: 81, text: "Find two other people to make a human bridge for you to pass through, this will leave you in another very similar dimension", category: "Interdimensional Travel"},
+    { id: 82, text: "Smile as big as you can for 5 minutes straight", category: "Facial Endurance"},
+    { id: 83, text: "Pick an accent and roll with it for half an hour (pirate, cowboy, etc.)", category: "Linguistic Shapeshifting"}
   ];
   
   return allMissions.filter(mission => !completedMissions.includes(mission.id));
@@ -618,6 +764,11 @@ app.get('/missions', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'missions.html'));
 });
 
+// MPV test route
+app.get('/mpv-test.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'mpv-test.html'));
+});
+
 // Socket.io for real-time updates
 io.on('connection', (socket) => {
   socket.emit('queueUpdate', { queue, currentSong });
@@ -635,6 +786,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ YouTube API: Connected and ready`);
   console.log(`✅ Quota tracking: Active (${MAX_SEARCH_QUOTA} units available)`);
   console.log(`✅ Mission tracking: Active with ${getAvailableMissions([]).length} missions`);
+  console.log(`✅ Fallback system: Ready (embed + browser redirect)`);
   
   const ip = require('address').ip();
   console.log('\n📲 QR Code for guests:');

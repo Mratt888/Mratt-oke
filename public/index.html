@@ -517,7 +517,7 @@
             document.getElementById('manualValidationMessage').style.display = 'none';
         }
 
-        async function validateManualVideo() {
+                async function validateManualVideo() {
             const youtubeUrl = document.getElementById('youtubeUrl').value.trim();
             const singer = document.getElementById('singerName').value.trim();
             const messageElement = document.getElementById('manualValidationMessage');
@@ -538,25 +538,33 @@
                 return;
             }
 
-            showManualMessage('Validating video...', 'loading');
+            showManualMessage('Adding to queue...', 'loading');
 
             try {
-                const response = await fetch('/api/validate-video', {
+                const response = await fetch('/api/validate-and-queue', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ youtubeUrl })
+                    body: JSON.stringify({ 
+                        singer: singer,
+                        youtubeUrl: youtubeUrl
+                    })
                 });
 
                 const data = await response.json();
-
+                
                 if (data.success) {
-                    showManualMessage(`✅ Validated: ${data.title}`, 'success');
-                    await addManualVideoToQueue(data.videoId, data.title, singer);
+                    let message = `✅ Added to queue! Position: ${data.queuePosition}`;
+                    if (data.playbackMethod === 'browser') {
+                        message += ' (Will open in YouTube)';
+                    }
+                    showManualMessage(message, 'success');
+                    clearForm();
+                    hideManualInput();
                 } else {
                     showManualMessage(`❌ ${data.error}`, 'error');
                 }
             } catch (error) {
-                showManualMessage('❌ Validation failed. Please check the URL and try again.', 'error');
+                showManualMessage('❌ Failed to add to queue', 'error');
             }
         }
 
@@ -570,33 +578,6 @@
                                        type === 'error' ? '#c62828' : '#666';
             messageElement.style.border = type === 'success' ? '1px solid #4CAF50' : 
                                         type === 'error' ? '1px solid #f44336' : '1px solid #ddd';
-        }
-
-        async function addManualVideoToQueue(videoId, title, singer) {
-            try {
-                const response = await fetch('/api/request', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        singer: singer,
-                        videoId: videoId,
-                        songTitle: title
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (data.success) {
-                    showSuccess(`✅ Added to queue! Position: ${data.queuePosition}`);
-                    clearForm();
-                    hideManualInput();
-                } else {
-                    showError('Error: ' + (data.error || 'Failed to add to queue'));
-                }
-            } catch (error) {
-                console.error('Request error:', error);
-                showError('Error submitting request');
-            }
         }
 
         async function performSearch(query) {
