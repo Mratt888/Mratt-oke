@@ -202,6 +202,9 @@
                 <button onclick="previousStep()" id="prevBtn" style="display: none;">← Previous</button>
                 <button onclick="nextStep()" id="nextBtn">Continue Induction →</button>
                 <button onclick="beginOperations()" id="beginBtn" class="begin-button" style="display: none;">🎭 BEGIN OPERATIONS 🎭</button>
+                <button onclick="skipBriefing()" id="skipBtn" style="background: transparent; color: #ff4444; border: 1px solid #ff4444; margin-left: 10px;">
+        😴 I'VE ALREADY READ THIS CRAP
+    </button>
             </div>
         </div>
     </div>
@@ -351,6 +354,36 @@
                 window.location.href = 'missions.html';
             });
         }
+
+        function skipBriefing() {
+    const beginBtn = document.getElementById('beginBtn');
+    const briefingText = document.getElementById('briefingText');
+    
+    if (beginBtn) {
+        beginBtn.disabled = true;
+        beginBtn.textContent = 'ACTIVATING...';
+    }
+    
+    if (briefingText) {
+        briefingText.innerHTML = '<div class="loading">Skipping briefing...</div>';
+    }
+
+    // Save that briefing was completed
+    let operativeId = localStorage.getItem('arcaneOperativeId');
+    if (!operativeId) {
+        operativeId = 'op_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('arcaneOperativeId', operativeId);
+    }
+
+    localStorage.setItem('arcaneBriefingCompleted', 'true');
+
+    console.log('Skipping briefing for operative:', operativeId);
+
+    // Redirect to missions
+    setTimeout(() => {
+        window.location.href = 'missions.html';
+    }, 1000);
+}
 
         // Initialize first step
         updateStep();
