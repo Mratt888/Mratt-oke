@@ -697,9 +697,13 @@
             document.getElementById('skipBtn').style.display = hasActiveMission ? 'block' : 'none';
         }
 
-        function updateScore(score) {
-            document.getElementById('scoreValue').textContent = score;
-        }
+      function updateScore(score) {
+    // Only update if we have a valid score from server completion
+    if (score !== undefined && score !== null) {
+        document.getElementById('scoreValue').textContent = score;
+    }
+    // Otherwise, don't change the displayed score
+}
 
         function showStatus(message, type) {
             const statusElement = document.getElementById('statusMessage');
