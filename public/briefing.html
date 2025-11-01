@@ -112,6 +112,7 @@
             gap: 15px;
             justify-content: center;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
         
         button {
@@ -126,6 +127,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             flex: 1;
+            min-width: 120px;
         }
         
         button:hover {
@@ -151,6 +153,17 @@
             background: linear-gradient(135deg, #00cc6a, #00aa55);
             box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
         }
+
+        .skip-button {
+            background: transparent;
+            color: #ff4444;
+            border: 1px solid #ff4444;
+        }
+        
+        .skip-button:hover {
+            background: rgba(255, 68, 68, 0.1);
+            box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
+        }
         
         .rules-list {
             list-style: none;
@@ -174,6 +187,7 @@
             text-align: center;
             color: #00ff88;
             margin: 10px 0;
+            font-size: 1.1em;
         }
         
         @keyframes scan {
@@ -202,9 +216,7 @@
                 <button onclick="previousStep()" id="prevBtn" style="display: none;">← Previous</button>
                 <button onclick="nextStep()" id="nextBtn">Continue Induction →</button>
                 <button onclick="beginOperations()" id="beginBtn" class="begin-button" style="display: none;">🎭 BEGIN OPERATIONS 🎭</button>
-                <button onclick="skipBriefing()" id="skipBtn" style="background: transparent; color: #ff4444; border: 1px solid #ff4444; margin-left: 10px;">
-        😴 I'VE ALREADY READ THIS CRAP
-    </button>
+                <button onclick="skipBriefing()" id="skipBtn" class="skip-button">😴 I'VE ALREADY READ THIS CRAP</button>
             </div>
         </div>
     </div>
@@ -287,6 +299,9 @@
                     alert('Codename must be at least 2 characters!');
                     return;
                 }
+                // Save codename immediately when entered
+                localStorage.setItem('arcaneOperativeName', codename);
+                console.log('💾 Saved codename:', codename);
             }
 
             if (currentStep < inductionSteps.length - 1) {
@@ -302,15 +317,16 @@
             }
         }
 
-                function beginOperations() {
-            // Get the codename from localStorage instead of the form
-            const codename = localStorage.getItem('arcaneOperativeName');
+        function beginOperations() {
+            // Get OR CREATE the codename
+            let codename = localStorage.getItem('arcaneOperativeName');
             
             // If no codename in storage, use a fallback
             if (!codename) {
                 const fallbackNames = ['Ghost', 'Shadow', 'Phantom', 'Raven', 'Vortex'];
-                const randomName = fallbackNames[Math.floor(Math.random() * fallbackNames.length)] + Math.floor(Math.random() * 1000);
-                localStorage.setItem('arcaneOperativeName', randomName);
+                codename = fallbackNames[Math.floor(Math.random() * fallbackNames.length)] + Math.floor(Math.random() * 1000);
+                localStorage.setItem('arcaneOperativeName', codename);
+                console.log('🎭 Generated fallback codename:', codename);
             }
 
             const beginBtn = document.getElementById('beginBtn');
@@ -334,59 +350,110 @@
 
             localStorage.setItem('arcaneBriefingCompleted', 'true');
 
-            console.log('Activating operative:', operativeId, codename);
+            console.log('🚀 Activating operative:', { operativeId, codename });
 
-            // Try to register with server (non-blocking)
+            // Register with server
             fetch('/api/missions/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     operativeId: operativeId, 
-                    name: codename || 'Unknown Operative'
+                    name: codename
                 })
             })
+            .then(response => {
+                if (!response.ok) throw new Error('Registration failed');
+                return response.json();
+            })
+            .then(data => {
+                console.log('✅ Server registration successful');
+            })
             .catch(error => {
-                console.log('Server registration failed, using local mode');
+                console.log('⚠️ Server registration failed, using local mode');
             })
             .finally(() => {
-                // ALWAYS redirect
-                console.log('Redirecting to missions...');
-                window.location.href = 'missions.html';
+                // ALWAYS redirect after a brief delay
+                setTimeout(() => {
+                    console.log('🔀 Redirecting to missions...');
+                    window.location.href = 'missions.html';
+                }, 1500);
             });
         }
 
         function skipBriefing() {
-    const beginBtn = document.getElementById('beginBtn');
-    const briefingText = document.getElementById('briefingText');
-    
-    if (beginBtn) {
-        beginBtn.disabled = true;
-        beginBtn.textContent = 'ACTIVATING...';
-    }
-    
-    if (briefingText) {
-        briefingText.innerHTML = '<div class="loading">Skipping briefing...</div>';
-    }
+            // Get OR CREATE the codename
+            let codename = localStorage.getItem('arcaneOperativeName');
+            if (!codename) {
+                const fallbackNames = ['Ghost', 'Shadow', 'Phantom', 'Raven', 'Vortex'];
+                codename = fallbackNames[Math.floor(Math.random() * fallbackNames.length)] + Math.floor(Math.random() * 1000);
+                localStorage.setItem('arcaneOperativeName', codename);
+                console.log('🎭 Generated fallback codename (skip):', codename);
+            }
 
-    // Save that briefing was completed
-    let operativeId = localStorage.getItem('arcaneOperativeId');
-    if (!operativeId) {
-        operativeId = 'op_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('arcaneOperativeId', operativeId);
-    }
+            const skipBtn = document.getElementById('skipBtn');
+            const briefingText = document.getElementById('briefingText');
+            
+            if (skipBtn) {
+                skipBtn.disabled = true;
+                skipBtn.textContent = 'SKIPPING...';
+            }
+            
+            if (briefingText) {
+                briefingText.innerHTML = '<div class="loading">Skipping briefing...</div>';
+            }
 
-    localStorage.setItem('arcaneBriefingCompleted', 'true');
+            // Save/ensure operative ID
+            let operativeId = localStorage.getItem('arcaneOperativeId');
+            if (!operativeId) {
+                operativeId = 'op_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('arcaneOperativeId', operativeId);
+            }
 
-    console.log('Skipping briefing for operative:', operativeId);
+            localStorage.setItem('arcaneBriefingCompleted', 'true');
 
-    // Redirect to missions
-    setTimeout(() => {
-        window.location.href = 'missions.html';
-    }, 1000);
-}
+            console.log('⏩ Skipping briefing for operative:', { operativeId, codename });
+
+            // Register with server
+            fetch('/api/missions/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    operativeId: operativeId, 
+                    name: codename
+                })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Registration failed');
+                return response.json();
+            })
+            .then(data => {
+                console.log('✅ Server registration successful (skip)');
+            })
+            .catch(error => {
+                console.log('⚠️ Server registration failed, using local mode (skip)');
+            })
+            .finally(() => {
+                // ALWAYS redirect after a brief delay
+                setTimeout(() => {
+                    console.log('🔀 Redirecting to missions (skip)...');
+                    window.location.href = 'missions.html';
+                }, 1000);
+            });
+        }
 
         // Initialize first step
         updateStep();
+
+        // Pre-fill codename if it exists
+        window.addEventListener('load', function() {
+            const existingCodename = localStorage.getItem('arcaneOperativeName');
+            if (existingCodename && currentStep === 1) {
+                const codenameInput = document.getElementById('operativeCodename');
+                if (codenameInput) {
+                    codenameInput.value = existingCodename;
+                }
+            }
+        });
     </script>
 </body>
 </html>

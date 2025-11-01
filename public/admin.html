@@ -169,13 +169,6 @@
             text-align: center;
         }
 
-        .leaderboard-mission {
-            color: #666;
-            font-size: 0.8em;
-            font-style: italic;
-            margin-top: 3px;
-        }
-
         .mission-stats {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -200,29 +193,6 @@
         .stat-label {
             color: #666;
             font-size: 0.9em;
-        }
-
-        /* Active Missions Section */
-        .active-missions {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .active-mission-item {
-            background: #fff3e0;
-            border: 1px solid #ff9800;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 8px;
-        }
-
-        .mission-category {
-            background: #9c27b0;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.7em;
-            margin-right: 10px;
         }
 
         /* Search styles */
@@ -409,6 +379,22 @@
         .tab-content.active {
             display: block;
         }
+
+        .connection-status {
+            padding: 10px;
+            border-radius: 4px;
+            background: #f5f5f5;
+            margin-bottom: 15px;
+        }
+
+        .mission-update {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -451,7 +437,7 @@
         <!-- Connection Status -->
         <div class="admin-section">
             <h3>📡 Connection Status</h3>
-            <div id="connectionStatus" style="padding: 10px; border-radius: 4px; background: #f5f5f5;">
+            <div id="connectionStatus" class="connection-status">
                 Checking connection...
             </div>
         </div>
@@ -534,6 +520,11 @@
         <div class="admin-section">
             <h3>🔮 Mission System Overview</h3>
             <button onclick="refreshMissionData()" class="mission-btn">🔄 Refresh Mission Data</button>
+            
+            <div id="missionUpdates" style="max-height: 200px; overflow-y: auto; margin-top: 15px;">
+                <!-- Real-time mission updates will appear here -->
+            </div>
+            
             <div class="mission-stats">
                 <div class="stat-card">
                     <div class="stat-number" id="totalOperatives">0</div>
@@ -544,12 +535,12 @@
                     <div class="stat-label">Rituals Completed</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="activeMissionsCount">0</div>
-                    <div class="stat-label">Active Missions</div>
+                    <div class="stat-number" id="uniqueMissions">100</div>
+                    <div class="stat-label">Available Rituals</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="uniqueMissions">78</div>
-                    <div class="stat-label">Available Rituals</div>
+                    <div class="stat-number" id="leaderboardUpdates">0</div>
+                    <div class="stat-label">Live Updates</div>
                 </div>
             </div>
         </div>
@@ -558,13 +549,6 @@
             <h3>🏆 Mission Leaderboard</h3>
             <div id="missionLeaderboard" class="mission-leaderboard">
                 <div class="loading">Loading mission data...</div>
-            </div>
-        </div>
-
-        <div class="admin-section">
-            <h3>🎯 Currently Active Missions</h3>
-            <div id="activeMissions" class="active-missions">
-                <div class="loading">Loading active missions...</div>
             </div>
         </div>
 
@@ -581,6 +565,7 @@
         let selectedVideo = null;
         let searchTimeout = null;
         let searchQuotaExceeded = false;
+        let leaderboardUpdateCount = 0;
 
         // Initialize socket connection
         socket.on('connect', () => {
@@ -593,6 +578,32 @@
 
         socket.on('connect_error', () => {
             updateConnectionStatus('⚠️ Connection failed', 'orange');
+        });
+
+        // Mission leaderboard real-time updates
+        socket.on('missionLeaderboardUpdate', (leaderboard) => {
+            leaderboardUpdateCount++;
+            document.getElementById('leaderboardUpdates').textContent = leaderboardUpdateCount;
+            
+            // Add mission update notification
+            const missionUpdates = document.getElementById('missionUpdates');
+            const updateDiv = document.createElement('div');
+            updateDiv.className = 'mission-update';
+            updateDiv.textContent = `🔄 Leaderboard updated at ${new Date().toLocaleTimeString()} (${leaderboard.length} operatives)`;
+            missionUpdates.appendChild(updateDiv);
+            
+            // Keep only last 10 updates
+            while (missionUpdates.children.length > 10) {
+                missionUpdates.removeChild(missionUpdates.firstChild);
+            }
+            
+            // Scroll to bottom
+            missionUpdates.scrollTop = missionUpdates.scrollHeight;
+            
+            // Update leaderboard if we're on missions tab
+            if (document.getElementById('missions-tab').classList.contains('active')) {
+                updateMissionLeaderboard(leaderboard);
+            }
         });
 
         function updateConnectionStatus(message, color) {
@@ -675,53 +686,53 @@
         }
 
         async function validateAdminManualVideo() {
-    const youtubeUrl = document.getElementById('adminYoutubeUrl').value.trim();
-    const singer = document.getElementById('manualSingerName').value.trim();
-    const messageElement = document.getElementById('adminManualValidationMessage');
-    
-    if (!youtubeUrl) {
-        showAdminManualMessage('Please enter a YouTube URL', 'error');
-        return;
-    }
-
-    if (!singer) {
-        showAdminManualMessage('Please enter singer name first', 'error');
-        return;
-    }
-
-    showAdminManualMessage('Adding to queue...', 'loading');
-
-    try {
-        const response = await fetch('/api/admin-add-to-top', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                singer: singer,
-                youtubeUrl: youtubeUrl
-            })
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-            let message = `✅ Added ${singer} to top of queue!`;
-            if (data.playbackMethod === 'browser') {
-                message += ' (Will open in YouTube)';
+            const youtubeUrl = document.getElementById('adminYoutubeUrl').value.trim();
+            const singer = document.getElementById('manualSingerName').value.trim();
+            const messageElement = document.getElementById('adminManualValidationMessage');
+            
+            if (!youtubeUrl) {
+                showAdminManualMessage('Please enter a YouTube URL', 'error');
+                return;
             }
-            showAdminManualMessage(message, 'success');
-            document.getElementById('adminYoutubeUrl').value = '';
-            document.getElementById('manualSingerName').value = '';
-            setTimeout(() => {
-                hideManualInput();
-            }, 2000);
-        } else {
-            showAdminManualMessage('Error: ' + (data.error || 'Failed to add to queue'), 'error');
+
+            if (!singer) {
+                showAdminManualMessage('Please enter singer name first', 'error');
+                return;
+            }
+
+            showAdminManualMessage('Adding to queue...', 'loading');
+
+            try {
+                const response = await fetch('/api/admin-add-to-top', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        singer: singer,
+                        youtubeUrl: youtubeUrl
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    let message = `✅ Added ${singer} to top of queue!`;
+                    if (data.playbackMethod === 'browser') {
+                        message += ' (Will open in YouTube)';
+                    }
+                    showAdminManualMessage(message, 'success');
+                    document.getElementById('adminYoutubeUrl').value = '';
+                    document.getElementById('manualSingerName').value = '';
+                    setTimeout(() => {
+                        hideManualInput();
+                    }, 2000);
+                } else {
+                    showAdminManualMessage('Error: ' + (data.error || 'Failed to add to queue'), 'error');
+                }
+            } catch (error) {
+                console.error('Add to top error:', error);
+                showAdminManualMessage('Error submitting request', 'error');
+            }
         }
-    } catch (error) {
-        console.error('Add to top error:', error);
-        showAdminManualMessage('Error submitting request', 'error');
-    }
-}
 
         function showAdminManualMessage(message, type) {
             const messageElement = document.getElementById('adminManualValidationMessage');
@@ -737,7 +748,6 @@
                                         type === 'error' ? '1px solid #f44336' : 
                                         type === 'warning' ? '1px solid #ff9800' : '1px solid #ddd';
         }
-
     
         // Tab management
         function showTab(tabName) {
@@ -770,55 +780,36 @@
         }
 
         function updateMissionDashboard(data) {
+            // Update stats
             document.getElementById('totalOperatives').textContent = data.totalOperatives || 0;
             document.getElementById('totalCompletions').textContent = data.totalCompletions || 0;
-            document.getElementById('activeMissionsCount').textContent = data.operatives.filter(op => op.currentMission).length;
 
+            // Update leaderboard
             const leaderboard = document.getElementById('missionLeaderboard');
-            if (data.operatives && data.operatives.length === 0) {
+            if (!data.operatives || data.operatives.length === 0) {
                 leaderboard.innerHTML = '<div class="loading">No operatives yet</div>';
-            } else if (data.operatives) {
+            } else {
                 leaderboard.innerHTML = data.operatives
                     .sort((a, b) => b.completed - a.completed)
                     .map((operative, index) => `
                         <div class="leaderboard-item">
                             <div class="leaderboard-rank">${index + 1}</div>
-                            <div class="leaderboard-info">
-                                <div class="leaderboard-name">${operative.name}</div>
-                                ${operative.currentMission ? 
-                                    `<div class="leaderboard-mission">Active: ${operative.currentMission.text || operative.currentMission.name}</div>` : 
-                                    ''}
-                            </div>
-                            <div class="leaderboard-score">${operative.completed} rituals</div>
+                            <div class="leaderboard-name">${operative.name}</div>
+                            <div class="leaderboard-score">${operative.completed}</div>
                         </div>
                     `).join('');
             }
 
-            const activeMissions = document.getElementById('activeMissions');
-            const activeOps = data.operatives ? data.operatives.filter(op => op.currentMission) : [];
-            if (activeOps.length === 0) {
-                activeMissions.innerHTML = '<div class="loading">No active missions</div>';
-            } else {
-                activeMissions.innerHTML = activeOps.map(operative => `
-                    <div class="active-mission-item">
-                        <strong>${operative.name}</strong>
-                        <span class="mission-category">${operative.currentMission.category || 'Unknown'}</span>
-                        <div class="song-title">${operative.currentMission.text || operative.currentMission.name}</div>
-                        <small>Total completions: ${operative.completed} | Joined: ${new Date(operative.joinTime).toLocaleTimeString()}</small>
-                    </div>
-                `).join('');
-            }
-
+            // Update history
             const missionHistory = document.getElementById('missionHistory');
-            if (data.history && data.history.length === 0) {
+            if (!data.history || data.history.length === 0) {
                 missionHistory.innerHTML = '<div class="loading">No mission history yet</div>';
-            } else if (data.history) {
+            } else {
                 missionHistory.innerHTML = `
                     <div style="max-height: 200px; overflow-y: auto;">
                         ${data.history.slice(-10).reverse().map(completion => `
                             <div style="padding: 8px; border-bottom: 1px solid #eee; font-size: 0.9em;">
-                                <strong>${completion.operativeName}</strong> completed mission 
-                                <em>${completion.missionId}</em> at ${new Date(completion.timestamp).toLocaleTimeString()}
+                                <strong>${completion.operativeName}</strong> completed mission at ${new Date(completion.timestamp).toLocaleTimeString()}
                             </div>
                         `).join('')}
                     </div>
@@ -826,12 +817,22 @@
             }
         }
 
-        // Socket updates for missions
-        socket.on('missionLeaderboardUpdate', (leaderboard) => {
-            if (document.getElementById('missions-tab').classList.contains('active')) {
-                refreshMissionData();
+        function updateMissionLeaderboard(leaderboard) {
+            const leaderboardElement = document.getElementById('missionLeaderboard');
+            if (!leaderboard || leaderboard.length === 0) {
+                leaderboardElement.innerHTML = '<div class="loading">No operatives yet</div>';
+                return;
             }
-        });
+
+            leaderboardElement.innerHTML = leaderboard
+                .map((operative, index) => `
+                    <div class="leaderboard-item">
+                        <div class="leaderboard-rank">${index + 1}</div>
+                        <div class="leaderboard-name">${operative.name}</div>
+                        <div class="leaderboard-score">${operative.completed}</div>
+                    </div>
+                `).join('');
+        }
 
         // Queue management functions
         function showAddToTop() {
@@ -925,41 +926,41 @@
         });
 
         async function addToTop() {
-    const singer = document.getElementById('adminSingerName').value.trim();
-    
-    if (!singer || !selectedVideo) {
-        showAdminError('Please enter singer name and select a song');
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/admin-add-to-top', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                singer: singer,
-                youtubeUrl: `https://www.youtube.com/watch?v=${selectedVideo.id}`
-            })
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-            let message = `✅ Added ${singer} to top of queue!`;
-            if (data.playbackMethod === 'browser') {
-                message += ' (Will open in YouTube)';
+            const singer = document.getElementById('adminSingerName').value.trim();
+            
+            if (!singer || !selectedVideo) {
+                showAdminError('Please enter singer name and select a song');
+                return;
             }
-            showAdminSuccess(message);
-            clearAdminSelection();
-            hideAddToTop();
-        } else {
-            showAdminError('Error: ' + (data.error || 'Failed to add to queue'));
+
+            try {
+                const response = await fetch('/api/admin-add-to-top', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        singer: singer,
+                        youtubeUrl: `https://www.youtube.com/watch?v=${selectedVideo.id}`
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    let message = `✅ Added ${singer} to top of queue!`;
+                    if (data.playbackMethod === 'browser') {
+                        message += ' (Will open in YouTube)';
+                    }
+                    showAdminSuccess(message);
+                    clearAdminSelection();
+                    hideAddToTop();
+                } else {
+                    showAdminError('Error: ' + (data.error || 'Failed to add to queue'));
+                }
+            } catch (error) {
+                console.error('Add to top error:', error);
+                showAdminError('Error submitting request');
+            }
         }
-    } catch (error) {
-        console.error('Add to top error:', error);
-        showAdminError('Error submitting request');
-    }
-}
 
         function showAdminSuccess(message) {
             const successMsg = document.getElementById('adminSuccessMessage');

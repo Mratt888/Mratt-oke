@@ -102,6 +102,7 @@
             background: rgba(20, 20, 20, 0.8);
             border: 1px solid #333;
             border-radius: 5px;
+            position: relative;
         }
         
         .operative-name {
@@ -109,6 +110,21 @@
             font-size: 1.1em;
             font-weight: bold;
             margin-bottom: 5px;
+        }
+        
+        .edit-codename {
+            background: transparent;
+            color: #e91e63;
+            border: 1px solid #e91e63;
+            padding: 2px 8px;
+            font-size: 0.7em;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-left: 8px;
+        }
+        
+        .edit-codename:hover {
+            background: rgba(233, 30, 99, 0.1);
         }
         
         .current-score {
@@ -179,7 +195,7 @@
             cursor: not-allowed;
         }
 
-                .skip-controls button {
+        .skip-controls button {
             background: transparent;
             color: #ff4444;
             border: 1px solid #ff4444;
@@ -204,6 +220,7 @@
         
         .completed { color: #00ff88; }
         .error { color: #ff4444; }
+        .info { color: #e91e63; }
         
         .top-leaderboard {
             background: rgba(20, 20, 20, 0.8);
@@ -291,6 +308,28 @@
             line-height: 1.3;
         }
         
+        .bookmark-notice {
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid #00ff88;
+            padding: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            border-radius: 5px;
+            position: relative;
+        }
+        
+        .bookmark-notice button {
+            background: transparent;
+            color: #00ff88;
+            border: 1px solid #00ff88;
+            padding: 2px 8px;
+            font-size: 0.7em;
+            margin-top: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            flex: none;
+        }
+        
         @keyframes scan {
             0% { transform: translateX(-100%); }
             100% { transform: translateX(100%); }
@@ -309,26 +348,18 @@
         
         <!-- Missions Tab -->
         <div id="missions-tab" class="tab-content active">
-            <!-- Missions Tab -->
-<div id="missions-tab" class="tab-content active">
-    <!-- ADD THIS DISMISSIBLE BOOKMARK NOTICE -->
-    <div id="bookmarkNotice" style="background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; padding: 10px; margin-bottom: 15px; text-align: center; border-radius: 5px; position: relative;">
-        <strong style="color: #00ff88;">📖 BOOKMARK THIS PAGE!</strong>
-        <div style="color: #00ff88; font-size: 0.8em; margin-top: 5px;">
-            Save this URL to easily return to your missions throughout the night
-        </div>
-        <button onclick="dismissBookmarkNotice()" style="background: transparent; color: #00ff88; border: 1px solid #00ff88; padding: 2px 8px; font-size: 0.7em; margin-top: 5px; border-radius: 3px; cursor: pointer;">
-            Got it
-        </button>
-    </div>
-    
-    <div class="operative-info">
-        <div class="operative-name" id="currentCodename">Loading...</div>
-        <div class="current-score">Rituals: <span id="scoreValue">0</span></div>
-    </div>
-    </div>
+            <!-- Bookmark Notice -->
+            <div id="bookmarkNotice" class="bookmark-notice">
+                <strong style="color: #00ff88;">📖 BOOKMARK THIS PAGE!</strong>
+                <div style="color: #00ff88; font-size: 0.8em; margin-top: 5px;">
+                    Save this URL to easily return to your missions throughout the night
+                </div>
+                <button onclick="dismissBookmarkNotice()">Got it</button>
+            </div>
+            
             <div class="operative-info">
                 <div class="operative-name" id="currentCodename">Loading...</div>
+                <button class="edit-codename" onclick="editCodename()">✏️ Edit</button>
                 <div class="current-score">Rituals: <span id="scoreValue">0</span></div>
             </div>
             
@@ -355,7 +386,7 @@
             </div>
 
             <div class="skip-controls" style="text-align: center; margin: 10px 0;">
-                <button id="skipBtn" onclick="attemptSkipMission()" style="background: transparent; color: #ff4444; border: 1px solid #ff4444; padding: 8px 16px; font-size: 0.8em; display: none;">
+                <button id="skipBtn" onclick="attemptSkipMission()" style="display: none;">
                     I cannot complete this mission
                 </button>
             </div>
@@ -380,8 +411,9 @@
         </div>
     </div>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        // Mission database - ALL 78 MISSIONS
+        // Mission database - ALL 100 MISSIONS
         const missions = [
             {id: 1, text: "The Recruiter (Red): Secretly recruit people to the RED team. Teams go public at 10:30 PM.", category: "Social Alchemy"},
             {id: 2, text: "The Recruiter (Blue): Secretly recruit people to the BLUE team.", category: "Social Alchemy"},
@@ -464,10 +496,29 @@
             {id: 79, text: "Yell hella loud right now", category: "Auditory Expression"},
             {id: 80, text: "Allow somebody the opportunity to give you a nickname. It's mandatory tonight but if it sticks, it sticks", category: "Social Transformation"},
             {id: 81, text: "Find two other people to make a human bridge for you to pass through, this will leave you in another very similar dimension", category: "Interdimensional Travel"},
-            {id: 82, text: "Smile as big as you can for 5 minutes straight", category: "Facial Endurance"}, 
-            {id: 83, text: "Pick an accent and roll with it for half an hour (pirate, cowboy, etc.)", category: "Linguistic Shapeshifting"}
+            {id: 82, text: "Smile as big as you can for 5 minutes straight", category: "Facial Endurance"},
+            {id: 83, text: "Pick an accent and roll with it for half an hour (pirate, cowboy, etc.)", category: "Linguistic Shapeshifting"},
+            {id: 84, text: "Do 10 jumping jacks right now", category: "Physical Activation"},
+            {id: 85, text: "Give someone a high five", category: "Social Connection"},
+            {id: 86, text: "Spin around 3 times", category: "Kinetic Energy"},
+            {id: 87, text: "Take a selfie with a stranger", category: "Social Documentation"},
+            {id: 88, text: "Chug a glass of water", category: "Hydration Ritual"},
+            {id: 89, text: "Do an impression of any animal", category: "Zoological Mimicry"},
+            {id: 90, text: "Find something blue and show it to someone", category: "Color Quest"},
+            {id: 91, text: "Tell someone a joke", category: "Comedic Exchange"},
+            {id: 92, text: "Do a silly dance for 15 seconds", category: "Rhythmic Expression"},
+            {id: 93, text: "Give someone a genuine compliment", category: "Positive Energy"},
+            {id: 94, text: "Take a deep breath and hold it for 10 seconds", category: "Respiratory Control"},
+            {id: 95, text: "Find and touch something textured", category: "Sensory Awareness"},
+            {id: 96, text: "Make eye contact and wave at someone across the room", category: "Nonverbal Communication"},
+            {id: 97, text: "Hum your favorite song for 30 seconds", category: "Musical Expression"},
+            {id: 98, text: "Balance on one foot for 20 seconds", category: "Physical Stability"},
+            {id: 99, text: "Find someone wearing the same color as you", category: "Color Synchronization"},
+            {id: 100, text: "Clap your hands 5 times as loud as you can", category: "Auditory Impact"}
         ];
 
+        // Socket.io connection
+        const socket = io();
         let currentMission = null;
 
         function showTab(tabName) {
@@ -487,11 +538,48 @@
         }
 
         function getOperativeId() {
-            return localStorage.getItem('arcaneOperativeId') || 'op_unknown';
+            let operativeId = localStorage.getItem('arcaneOperativeId');
+            if (!operativeId) {
+                operativeId = 'op_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('arcaneOperativeId', operativeId);
+            }
+            return operativeId;
         }
 
         function getOperativeName() {
-            return localStorage.getItem('arcaneOperativeName') || 'Unknown Operative';
+            let name = localStorage.getItem('arcaneOperativeName');
+            
+            if (!name) {
+                const fallbackNames = ['Ghost', 'Shadow', 'Phantom', 'Raven', 'Vortex'];
+                name = fallbackNames[Math.floor(Math.random() * fallbackNames.length)] + Math.floor(Math.random() * 1000);
+                localStorage.setItem('arcaneOperativeName', name);
+            }
+            
+            return name;
+        }
+
+        function editCodename() {
+            const newName = prompt('Enter your new codename:', getOperativeName());
+            if (newName && newName.trim().length >= 2) {
+                localStorage.setItem('arcaneOperativeName', newName.trim());
+                document.getElementById('currentCodename').textContent = newName.trim();
+                showStatus('Codename updated!', 'completed');
+                
+                // Update server with new name
+                const operativeId = getOperativeId();
+                fetch('/api/missions/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        operativeId: operativeId, 
+                        name: newName.trim()
+                    })
+                }).catch(error => {
+                    console.log('Server update failed');
+                });
+            } else if (newName) {
+                alert('Codename must be at least 2 characters!');
+            }
         }
 
         function getRandomMission() {
@@ -530,24 +618,70 @@
             if (!currentMission) return;
 
             const operativeId = getOperativeId();
+            const missionId = currentMission.id;
+            const missionText = currentMission.text;
             
-            const completedMissions = JSON.parse(localStorage.getItem(`completedMissions_${operativeId}`) || '[]');
-            completedMissions.push(currentMission.id);
-            localStorage.setItem(`completedMissions_${operativeId}`, JSON.stringify(completedMissions));
-            
-            const completedMissionTexts = JSON.parse(localStorage.getItem(`completedMissionTexts_${operativeId}`) || '[]');
-            completedMissionTexts.push(currentMission.text);
-            localStorage.setItem(`completedMissionTexts_${operativeId}`, JSON.stringify(completedMissionTexts));
-            
-            localStorage.removeItem(`activeMission_${operativeId}`);
-            
-            updateScore(completedMissions.length);
-            showStatus(`Ritual complete. Total: ${completedMissions.length}`, "completed");
-            
-            document.getElementById('missionText').innerHTML = "Your arcane assignment awaits...<br><span style='color: #e91e63; font-size: 0.9em;'>(Should you choose to accept it)</span>";
-            document.querySelector('.mission-category').textContent = "Awaiting Directive";
-            currentMission = null;
-            updateButtonStates();
+            console.log('🎯 Completing mission:', { operativeId, missionId, missionText });
+
+            // Update server FIRST
+            fetch('/api/missions/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    operativeId: operativeId,
+                    missionId: missionId,
+                    missionText: missionText
+                })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                console.log('✅ Server completion response:', data);
+                
+                // Update local storage
+                const completedMissions = JSON.parse(localStorage.getItem(`completedMissions_${operativeId}`) || '[]');
+                completedMissions.push(currentMission.id);
+                localStorage.setItem(`completedMissions_${operativeId}`, JSON.stringify(completedMissions));
+                
+                const completedMissionTexts = JSON.parse(localStorage.getItem(`completedMissionTexts_${operativeId}`) || '[]');
+                completedMissionTexts.push(currentMission.text);
+                localStorage.setItem(`completedMissionTexts_${operativeId}`, JSON.stringify(completedMissionTexts));
+                
+                localStorage.removeItem(`activeMission_${operativeId}`);
+                
+                updateScore(completedMissions.length);
+                showStatus(`Ritual complete! Total: ${completedMissions.length}`, "completed");
+                
+                // Reset mission display
+                document.getElementById('missionText').innerHTML = "Your arcane assignment awaits...<br><span style='color: #e91e63; font-size: 0.9em;'>(Should you choose to accept it)</span>";
+                document.querySelector('.mission-category').textContent = "Awaiting Directive";
+                currentMission = null;
+                updateButtonStates();
+                
+            })
+            .catch(error => {
+                console.error('❌ Server completion failed:', error);
+                // Fallback to local-only completion
+                const completedMissions = JSON.parse(localStorage.getItem(`completedMissions_${operativeId}`) || '[]');
+                completedMissions.push(currentMission.id);
+                localStorage.setItem(`completedMissions_${operativeId}`, JSON.stringify(completedMissions));
+                
+                const completedMissionTexts = JSON.parse(localStorage.getItem(`completedMissionTexts_${operativeId}`) || '[]');
+                completedMissionTexts.push(currentMission.text);
+                localStorage.setItem(`completedMissionTexts_${operativeId}`, JSON.stringify(completedMissionTexts));
+                
+                localStorage.removeItem(`activeMission_${operativeId}`);
+                
+                updateScore(completedMissions.length);
+                showStatus(`Ritual complete (offline). Total: ${completedMissions.length}`, "completed");
+                
+                document.getElementById('missionText').innerHTML = "Your arcane assignment awaits...<br><span style='color: #e91e63; font-size: 0.9em;'>(Should you choose to accept it)</span>";
+                document.querySelector('.mission-category').textContent = "Awaiting Directive";
+                currentMission = null;
+                updateButtonStates();
+            });
         }
 
         function displayMission(mission) {
@@ -555,7 +689,7 @@
             document.querySelector('.mission-category').textContent = mission.category;
         }
 
-               function updateButtonStates() {
+        function updateButtonStates() {
             const operativeId = getOperativeId();
             const hasActiveMission = !!localStorage.getItem(`activeMission_${operativeId}`);
             document.getElementById('getMissionBtn').disabled = hasActiveMission;
@@ -579,7 +713,7 @@
 
         function updateTopRanking(leaderboard) {
             const topRanking = document.getElementById('topRanking');
-            if (leaderboard.length === 0) {
+            if (!leaderboard || leaderboard.length === 0) {
                 topRanking.innerHTML = `
                     <div class="rank-item rank-1">1. ---</div>
                     <div class="rank-item rank-2">2. ---</div>
@@ -591,28 +725,34 @@
             topRanking.innerHTML = leaderboard.slice(0, 3).map((operative, index) => `
                 <div class="rank-item rank-${index + 1}">
                     ${index + 1}. ${operative.name}<br>
-                    <small>${operative.completed}</small>
+                    <small>${operative.completed} rituals</small>
                 </div>
             `).join('');
         }
 
         function updateLeaderboard() {
+            console.log('📊 Fetching leaderboard...');
             fetch('/api/missions/leaderboard')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
                 .then(leaderboard => {
+                    console.log('📊 Leaderboard data received:', leaderboard);
                     displayLeaderboard(leaderboard);
                     updateTopRanking(leaderboard);
                 })
                 .catch(error => {
+                    console.error('❌ Leaderboard fetch failed:', error);
                     document.getElementById('leaderboardList').innerHTML = 
-                        '<div style="text-align: center; color: #666; padding: 20px;">Leaderboard offline</div>';
+                        '<div style="text-align: center; color: #666; padding: 20px;">Leaderboard offline - scores saved locally</div>';
                 });
         }
 
         function displayLeaderboard(leaderboard) {
             const leaderboardList = document.getElementById('leaderboardList');
             
-            if (leaderboard.length === 0) {
+            if (!leaderboard || leaderboard.length === 0) {
                 leaderboardList.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">No operatives yet</div>';
                 return;
             }
@@ -626,7 +766,19 @@
             `).join('');
         }
 
-                // Skip mission functionality
+        // Real-time leaderboard updates
+        socket.on('missionLeaderboardUpdate', (leaderboard) => {
+            console.log('📡 Real-time leaderboard update received:', leaderboard);
+            displayLeaderboard(leaderboard);
+            updateTopRanking(leaderboard);
+            
+            // Show notification if we're on missions tab
+            if (document.getElementById('missions-tab').classList.contains('active')) {
+                showStatus('Leaderboard updated!', 'info');
+            }
+        });
+
+        // Skip mission functionality
         let skipAttempts = 0;
         const skipMessages = [
             "I cannot complete this mission",
@@ -641,18 +793,15 @@
             const skipBtn = document.getElementById('skipBtn');
             
             if (skipAttempts < skipMessages.length - 1) {
-                // Show next warning message
                 skipAttempts++;
                 skipBtn.textContent = skipMessages[skipAttempts];
                 
-                // Add some visual feedback
                 skipBtn.style.background = 'rgba(255, 68, 68, 0.1)';
                 setTimeout(() => {
                     skipBtn.style.background = 'transparent';
                 }, 200);
                 
             } else {
-                // Final skip - actually skip the mission
                 skipMission();
             }
         }
@@ -662,14 +811,11 @@
 
             const operativeId = getOperativeId();
             
-            // Just remove the active mission without adding to score
             localStorage.removeItem(`activeMission_${operativeId}`);
             
-            // Reset UI
             document.getElementById('missionText').innerHTML = "Your arcane assignment awaits...<br><span style='color: #e91e63; font-size: 0.9em;'>(Should you choose to accept it)</span>";
             document.querySelector('.mission-category').textContent = "Awaiting Directive";
             
-            // Hide skip button and reset attempts
             document.getElementById('skipBtn').style.display = 'none';
             skipAttempts = 0;
             document.getElementById('skipBtn').textContent = skipMessages[0];
@@ -681,30 +827,22 @@
         }
 
         // Dismiss bookmark notice
-function dismissBookmarkNotice() {
-    const notice = document.getElementById('bookmarkNotice');
-    if (notice) {
-        notice.style.display = 'none';
-    }
-    // Optional: Save preference to localStorage so it doesn't show again
-    localStorage.setItem('bookmarkNoticeDismissed', 'true');
-}
-
-// Check if notice was previously dismissed
-function checkBookmarkNotice() {
-    if (localStorage.getItem('bookmarkNoticeDismissed') === 'true') {
-        const notice = document.getElementById('bookmarkNotice');
-        if (notice) {
-            notice.style.display = 'none';
+        function dismissBookmarkNotice() {
+            const notice = document.getElementById('bookmarkNotice');
+            if (notice) {
+                notice.style.display = 'none';
+            }
+            localStorage.setItem('bookmarkNoticeDismissed', 'true');
         }
-    }
-}
 
-// Call this on page load
-window.onload = function() {
-    // ... your existing onload code ...
-    checkBookmarkNotice(); // Add this line
-}
+        function checkBookmarkNotice() {
+            if (localStorage.getItem('bookmarkNoticeDismissed') === 'true') {
+                const notice = document.getElementById('bookmarkNotice');
+                if (notice) {
+                    notice.style.display = 'none';
+                }
+            }
+        }
 
         // Initialize
         window.onload = function() {
@@ -721,6 +859,19 @@ window.onload = function() {
             }
             updateButtonStates();
             updateLeaderboard();
+            checkBookmarkNotice();
+
+            // Register with server
+            fetch('/api/missions/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    operativeId: operativeId, 
+                    name: getOperativeName()
+                })
+            }).catch(error => {
+                console.log('Server registration failed');
+            });
         }
     </script>
 </body>
